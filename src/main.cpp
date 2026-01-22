@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include "class.h"
+#include "gas.h"
 #include "post.h"
 
 using namespace std;
@@ -13,9 +14,18 @@ using namespace std;
 
 int main() {
 
+// species
+int nsp = 3;
+int nv  = nsp + 3;
+int V = nsp;
+int U = nsp+1;
+int P = nsp+2;
+
 // gas
 // the ratio of specific heats
 float gam = 1.4;
+// species weights (to come from OCEAN later)
+vector<float> wsp(nsp,1.0);
 
 // time       
 // t is the number of time steps
@@ -50,26 +60,27 @@ vector<float> A(m,1.0f);
 // M: the streamwise points 
 // T: the time steps
 
-FlowField q(3,m,t);
-
-// the initial condition
-float rhoi = 1e-3;
-float ui   = 3500;
-float pi   = 2620;
+FlowField q(nv,m,t);
 
 // the inlet boundary condition
-float rho1 = 1e-3;
+vector<float> rho1(nsp,1e-3);
 float u1   = 3500;
 float p1   = 2620;
 
+rho1[0] = 2e-4;
+rho1[1] = 5e-4;
+rho1[2] = 3e-4;
+
 // CFL check
-float sgm = ui*(x[2]-x[1])/dt;
+float sgm = u1*(x[2]-x[1])/dt;
 
 	for (int i =0; i<m; i++){
 		for (int k= 0; k<t; k++){
-			q(0,i,k) = rhoi;
-			q(1,i,k) =   ui;
-			q(2,i,k) =   pi;
+			for (int j=0; j<nsp; j++){
+			q(j,i,k) = rho1[j];
+			}
+			q(U,i,k) =   u1;
+			q(P,i,k) =   p1;
 		}
 	}
 
@@ -78,55 +89,76 @@ float sgm = ui*(x[2]-x[1])/dt;
 
 float dx;
 float dA;
-float drho;
 float du;
 float dp;
+float dTv;
+float rho = 0;
+vector<float> drho(nsp);
+
+float pe = 100.0;  // the electron pressure
+float cvv = 200.0; // the vibrational specific heat at constant volume
 
 	for (int k = 0; k<t-1; k++){
-		// initial condition
-		q(0,0,k) = rho1;	
-		q(1,0,k) =   u1;	
-		q(2,0,k) =   p1;                              
+		// inlet condition
+		for (int j=0; j<nsp; j++){
+		q(j,0,k) = rho1[j];	
+		}
+		q(U,0,k) =   u1;	
+		q(P,0,k) =   p1;                              
 
 		for (int i = 1; i<m; i++){
 		dx   = x[i] - x[i-1];
 		dA   = A[i] - A[i-1];
-		drho = q(0,i,k) - q(0,i-1,k);
-		du   = q(1,i,k) - q(1,i-1,k);
-		dp   = q(2,i,k) - q(2,i-1,k);
+		rho = 0.0;
+		for (int j=0; j<nsp; j++){
+		 drho[j] = q(j,i,k) - q(j,i-1,k);
+		 rho += q(j,i,k);
+		}
+		dTv  = q(V,i,k) - q(V,i-1,k);
+		du   = q(U,i,k) - q(U,i-1,k);
+		dp   = q(P,i,k) - q(P,i-1,k);
 
 		// continuity update
-		q(0,i,k+1) = dA/dx;         
-		q(0,i,k+1) = q(0,i,k+1)*(q(1,i,k)/A[i]);
-		q(0,i,k+1) = q(0,i,k+1) + du/dx;        
-		q(0,i,k+1) = q(0,i,k+1)*q(0,i,k);
-		q(0,i,k+1) = q(0,i,k+1) + q(1,i,k)*drho/dx; 
-		q(0,i,k+1) = dt*q(0,i,k+1);
+		for (int j=0; j<nsp; j++){
+		q(j,i,k+1)  = dA/dx;         
+		q(j,i,k+1) *= q(U,i,k)/A[i];
+		q(j,i,k+1) += du/dx;        
+		q(j,i,k+1) *= q(j,i,k);
+		q(j,i,k+1) += q(U,i,k)*drho[j]/dx; 
+		q(j,i,k+1) *= dt;
 
-		q(0,i,k+1) = q(0,i,k) - q(0,i,k+1);
+		q(j,i,k+1) = q(j,i,k) - q(j,i,k+1);
+		}
+		
+		// vibrational energy update
+		q(V,i,k+1)  = du/dx;
+		q(V,i,k+1) += (q(U,i,k)/A[i])*(dA/dx);
+		q(V,i,k+1) *= -pe;
+		q(V,i,k+1) /= rho*cvv;
+		q(V,i,k+1) += q(U,i,k)*dTv/dx;
+		q(V,i,k+1) *= dt;
+		q(V,i,k+1) = q(V,i,k) - q(V,i,k+1);
 
 		// momentum update
-		q(1,i,k+1) = dp/dx;
-		q(1,i,k+1) = q(1,i,k+1)/q(0,i,k);
-		q(1,i,k+1) = q(1,i,k+1) + q(1,i,k)*du/dx;
-		q(1,i,k+1) = q(1,i,k+1)*dt;              
+		q(U,i,k+1)  = dp/dx;
+		q(U,i,k+1) /= rho;      
+		q(U,i,k+1) += q(U,i,k)*du/dx;
+		q(U,i,k+1) *= dt;              
 		
-		q(1,i,k+1) = q(1,i,k) - q(1,i,k+1);              
+		q(U,i,k+1) = q(U,i,k) - q(U,i,k+1);              
 
 		// energy update
-		q(2,i,k+1) = dA/dx;         
-		q(2,i,k+1) = q(2,i,k+1)*(q(1,i,k)/A[i]);
-		q(2,i,k+1) = q(2,i,k+1) + du/dx;        
-		q(2,i,k+1) = q(2,i,k+1)*gam*q(2,i,k);   
-		q(2,i,k+1) = q(2,i,k+1) + q(1,i,k)*dp/dx;
-		q(2,i,k+1) = q(2,i,k+1)*dt;              
+		q(P,i,k+1) = dA/dx;         
+		q(P,i,k+1) *= q(U,i,k)/A[i];
+		q(P,i,k+1) += du/dx;        
+		q(P,i,k+1) *= gam*q(P,i,k);   
+		q(P,i,k+1) += q(U,i,k)*dp/dx;
+		q(P,i,k+1) *= dt;              
 		
-		q(2,i,k+1) = q(2,i,k) - q(2,i,k+1);              
+		q(P,i,k+1) = q(P,i,k) - q(P,i,k+1);              
 		}
 	}
-	write_flowfield(q, m, t, "../out/flowfield.dat");
-	write_outlet(   q, m, t, "../out/outlet.dat");
-	write_cl(       q, m, t, "../out/cl.dat");
+	write_cl( q, m, t, nsp, wsp, "../out/cl.dat");
 
 
   	return 0;
