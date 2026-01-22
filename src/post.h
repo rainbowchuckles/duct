@@ -82,6 +82,7 @@ void write_outlet(
 void write_cl(
     const FlowField& q,
     int m,
+    vector<float> x,
     int t,
     int nsp,
     vector<float> wsp,
@@ -102,7 +103,7 @@ void write_cl(
 
     for (int i = 0; i < m; ++i) {
             file
-                << i << " "
+                << x[i] << " "
                 << t-1 << " "; 
 		for (int j =0; j<nsp; j++){
                 file << q(j,i,t-1) << " ";  // rho

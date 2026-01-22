@@ -1,24 +1,40 @@
-# Compiler
+# Compilers
 CXX := g++
+FXX := gfortran
 
-# Compiler flags
+# Flags
 CXXFLAGS := -std=c++17 -Wall -Wextra
+FXXFLAGS :=
 
-# Target executable name
+# Target
 TARGET := a.out
 
-# Source files
-SRC := $(wildcard *.cpp)
+# Sources
+CSRC := $(wildcard *.cpp)
+FSRC := $(wildcard *.F)
+
+# Object files
+COBJ := $(CSRC:.cpp=.o)
+FOBJ := $(FSRC:.F=.o)
 
 # Default target
 all: $(TARGET)
 
-# Link / build
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(TARGET)
+# Link step - use g++ as the linker and add Fortran runtime libraries
+# Order: C++ objects, Fortran objects, external libs, Fortran runtime libs
+$(TARGET): $(COBJ) $(FOBJ)
+	$(CXX) $(COBJ) $(FOBJ) $(LIBS) -lgfortran -lquadmath -lm -o $(TARGET)
+
+# Compile C++ sources
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Compile Fortran sources
+%.o: %.F
+	$(FXX) $(FXXFLAGS) -c $< -o $@
 
 # Clean
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) *.o
 
 .PHONY: all clean

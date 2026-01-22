@@ -8,12 +8,13 @@
 #include "gas.h"
 #include "post.h"
 
+extern "C" void src_c(int n);
+
 using namespace std;
 
 // the main program
 
 int main() {
-
 // species
 int nsp = 3;
 int nv  = nsp + 3;
@@ -21,11 +22,12 @@ int V = nsp;
 int U = nsp+1;
 int P = nsp+2;
 
+src_c(nsp);
 // gas
 // the ratio of specific heats
 float gam = 1.4;
 // species weights (to come from OCEAN later)
-vector<float> wsp(nsp,1.0);
+vector<float> wsp(nsp,1.e-3);
 
 // time       
 // t is the number of time steps
@@ -37,7 +39,7 @@ float dt = 1.e-7;
 // m is the number of grid points
 int m = 400;
 // l is the length of the domain
-float l = 2.0;
+float l = 2.2;
 // x is the vector of physical grid locations
 vector<float> x(m);
 // populate the grid vector
@@ -54,6 +56,17 @@ vector<float> A(m,1.0f);
 		A[i] = A[i] + 4.64*static_cast<float>(i)/m;
 			}
 
+
+// the inlet boundary condition
+vector<float> rho1(nsp,1e-3);
+float u1   = 3500;
+float p1   = 2620;
+float Tv1  =  500;
+
+rho1[0] = 2e-4;
+rho1[1] = 5e-4;
+rho1[2] = 3e-4;
+
 // the flow vector
 // q(N,M,T)
 // N: the primitive variables (rho, u, p)
@@ -62,17 +75,7 @@ vector<float> A(m,1.0f);
 
 FlowField q(nv,m,t);
 
-// the inlet boundary condition
-vector<float> rho1(nsp,1e-3);
-float u1   = 3500;
-float p1   = 2620;
-
-rho1[0] = 2e-4;
-rho1[1] = 5e-4;
-rho1[2] = 3e-4;
-
-// CFL check
-float sgm = u1*(x[2]-x[1])/dt;
+// initialise the flow field
 
 	for (int i =0; i<m; i++){
 		for (int k= 0; k<t; k++){
@@ -95,8 +98,11 @@ float dTv;
 float rho = 0;
 vector<float> drho(nsp);
 
-float pe = 100.0;  // the electron pressure
+float pe = 0.0;  // the electron pressure
 float cvv = 200.0; // the vibrational specific heat at constant volume
+
+
+exit(0);
 
 	for (int k = 0; k<t-1; k++){
 		// inlet condition
@@ -158,7 +164,7 @@ float cvv = 200.0; // the vibrational specific heat at constant volume
 		q(P,i,k+1) = q(P,i,k) - q(P,i,k+1);              
 		}
 	}
-	write_cl( q, m, t, nsp, wsp, "../out/cl.dat");
+	write_cl( q, m, x, t, nsp, wsp, "../out/cl.dat");
 
 
   	return 0;
