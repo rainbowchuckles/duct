@@ -1,0 +1,3 @@
+c ...
+      REAL_ rpsi
+      common / cpsi / rpsi
