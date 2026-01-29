@@ -4,7 +4,7 @@ FXX := gfortran
 
 # Flags
 CXXFLAGS := -std=c++17 -Wall -Wextra
-FXXFLAGS :=
+FXXFLAGS := -I ../inc
 
 # Target
 TARGET := a.out
@@ -19,6 +19,9 @@ FOBJ := $(FSRC:.F=.o)
 
 # Default target
 all: $(TARGET)
+
+# Libraries
+LIBS= /home/joesteer/lib/libocean.a
 
 # Link step - use g++ as the linker and add Fortran runtime libraries
 # Order: C++ objects, Fortran objects, external libs, Fortran runtime libs

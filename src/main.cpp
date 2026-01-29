@@ -8,7 +8,7 @@
 #include "gas.h"
 #include "post.h"
 
-extern "C" void src_c(int n);
+extern "C" void tcw_c(int *nsp, double *nelsp, double *ielsp, double *melsp, double *wsp);
 
 using namespace std;
 
@@ -22,7 +22,19 @@ int V = nsp;
 int U = nsp+1;
 int P = nsp+2;
 
-src_c(nsp);
+vector<double> nelsp(64);
+vector<double> ielsp(64);
+vector<double> melsp(64);
+vector<double> wwsp(64);
+
+tcw_c(&nsp,nelsp.data(),ielsp.data(),melsp.data(),wwsp.data());
+for (int i=0; i<32; i++){
+cout << wwsp[i] << endl;}
+exit(0);
+
+
+
+
 // gas
 // the ratio of specific heats
 float gam = 1.4;
@@ -101,8 +113,6 @@ vector<float> drho(nsp);
 float pe = 0.0;  // the electron pressure
 float cvv = 200.0; // the vibrational specific heat at constant volume
 
-
-exit(0);
 
 	for (int k = 0; k<t-1; k++){
 		// inlet condition
