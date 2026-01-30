@@ -24,13 +24,14 @@ extern "C" void tcw_c(int *nsp, double *nelsp, double ielsp[][NSPMAX], double me
 		      int isprn[][NRNMAX], int msprn[][NRNMAX], int *ktbrn, int xtbrn[][NRNMAX], 
 		      double arr[][NSPMAX]);
 
-extern "C" void src_c(int *nsp, double *nelsp, double ielsp[][NSPMAX], double melsp[][NSPMAX], 
+extern "C" void src_c(int *nsp, double nelsp[NSPMAX], double ielsp[][NSPMAX], double melsp[][NSPMAX], 
 		      double *wsp,
 		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double *hfsp, double mw[][NSPMAX][NSPMAX], 
 		      double cs[][NSPMAX][NSPMAX],
 		      double *diss, double *inz, double apb[][NSPMAX], int *nrn, int nsprn[][NRNMAX], 
 		      int isprn[][NRNMAX], int msprn[][NRNMAX], int *ktbrn, int xtbrn[][NRNMAX], 
-		      double arr[][NSPMAX], double *q, double *f);
+	    	      double arr[][NSPMAX], double *q, double *f);
+
 using namespace std;
 
 // the main program
@@ -70,9 +71,9 @@ double qp[NSPMAX];
 double f[NSPMAX];
 
 tcw_c(&nsp,nelsp,ielsp,melsp,wwsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
+
 src_c(&nsp,nelsp,ielsp,melsp,wwsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
 
-for (int i=0; i<32; i++){cout << wwsp[i] << endl;}
 
 
 exit(0);

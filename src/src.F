@@ -26,14 +26,40 @@ c ... arguments
 
 c ... local symbols
 
+      integer           i,k,flg
+
+      real*8            dt,t_eq,rd
+         
+      real*8            tau
+      dimension         tau(NSPMAX,NSPMAX)
+      
+      real*8            df0
+      dimension         df0(NSPMAX,NSPMAX)
+
+      real*8            df1
+      dimension         df1(NSPMAX,NSPMAX)
+
+      real*8            dg0
+      dimension         dg0(NSPMAX,NSPMAX)
+
+      real*8            dg1
+      dimension         dg1(NSPMAX,NSPMAX)
+
+      real*8            dr
+      dimension         dr(NSPMAX)
+      
+      real*8            g0
+      dimension         g0(NSPMAX)
+
 c ... executable statements
 
       call src( nsp_c,nelsp_c,ielsp_c,melsp_c,wsp_c,rsp_c,
      1          asp_c,hfsp_c,mw_c,cs_c,diss_c,inz_c,apb_c,
      1          nrn_c,nsprn_c,isprn_c,msprn_c,ktbrn_c,xtbrn_c, 
-     1          arr_c,0,0,qp_c,0,f_c,0,0,0,0,0,0,0,0,
-     1          0,0,0, .false., 0.3, 1.0,0.0)
-      return
+     1          arr_c,t_eq,qp_c,qp_c,rd,f_c,df0,df1,g0,dg0,
+     1          dg1,dr,i,k,
+     1          dt,qp_c,flg, .false., 0.3, 1.0,tau)
+      return 
 
       end
 

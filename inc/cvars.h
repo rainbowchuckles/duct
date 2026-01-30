@@ -1,7 +1,7 @@
  	integer(c_int), intent(inout) :: nsp_c
- 	real(c_double)                :: nelsp_c(NSPMAX)
- 	real(c_double)                :: ielsp_c(NELMAX,NSPMAX)
- 	real(c_double)                :: melsp_c(NELMAX,NSPMAX)
+ 	integer(c_int)                :: nelsp_c(NSPMAX)
+ 	integer(c_int)                :: ielsp_c(NELMAX,NSPMAX)
+ 	integer(c_int)                :: melsp_c(NELMAX,NSPMAX)
  	real(c_double)                :: wsp_c(NSPMAX)
  	real(c_double)                :: rsp_c(4,NSPMAX)
  	real(c_double)                :: asp_c(NACOEF,NTRMAX,NSPMAX)
