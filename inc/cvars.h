@@ -17,6 +17,6 @@
  	integer(c_int), intent(inout) :: msprn_c(NSPMAX,NRNMAX)
  	integer(c_int), intent(inout) :: ktbrn_c(NRNMAX)
  	integer(c_int), intent(inout) :: xtbrn_c(NSPMAX,NRNMAX)
- 	real(c_double)                :: arr_c(64,NSPMAX)
+ 	real(c_double)                :: arr_c(64,NRNMAX)
  	real(c_double)                :: qp_c(NSPMAX)
  	real(c_double)                :: f_c(NSPMAX)

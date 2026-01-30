@@ -12,12 +12,10 @@ float calt(
     int i,
     int k,
     int nsp,
-    vector<float> wsp
+    double wsp[NSPMAX] 
 ) {
 	float sum = 0; // working variable
-	for (int j = 1; j<nsp; j++){
-		sum += q(j,i,k)/wsp[j];
-	} 
+	for (int j = 1; j<nsp; j++){sum += q(j,i,k)/wsp[j];} 
 	// calculate tt using boyle's law
 	float tt  = q(nsp+2,i,k);
 	tt -= q(0,i,k)*8.314*q(nsp,i,k)/wsp[0];

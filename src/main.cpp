@@ -4,10 +4,6 @@
 #include <cassert>
 #include <fstream>
 
-#include "class.h"
-#include "gas.h"
-#include "post.h"
-
 // Park vars
 
 #define NELMAX 8
@@ -15,6 +11,11 @@
 #define NTRMAX 4
 #define NACOEF 12
 #define NRNMAX 128
+
+#include "class.h"
+#include "gas.h"
+#include "post.h"
+
 
 extern "C" void tcw_c(int *nsp, double *nelsp, double ielsp[][NSPMAX], double melsp[][NSPMAX], 
 		      double *wsp,
@@ -42,7 +43,7 @@ int main() {
 double nelsp[NSPMAX];
 double ielsp[NELMAX][NSPMAX];
 double melsp[NELMAX][NSPMAX];
-double wwsp[NSPMAX]; // Fix
+double wsp[NSPMAX]; // Fix
 double rsp[4][NSPMAX];
 double asp[NACOEF][NTRMAX][NSPMAX];
 double hfsp[NSPMAX];
@@ -60,37 +61,31 @@ int    xtbrn[NSPMAX][NRNMAX];
 double arr[64][NSPMAX];
 
 // species
-int nsp =12;
-int nv  = nsp + 3;
-int V = nsp;
-int U = nsp+1;
-int P = nsp+2;
+int nsp;
 
 // bs for src
 double qp[NSPMAX];
 double f[NSPMAX];
 
-tcw_c(&nsp,nelsp,ielsp,melsp,wwsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
+// Retreive thermo stuff
+tcw_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
 
-src_c(&nsp,nelsp,ielsp,melsp,wwsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
-
-
-
-exit(0);
-
-
+//src_c(&nsp,nelsp,ielsp,melsp,wwsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
+//
+// species
+int nv  = nsp + 3;
+int V = nsp;
+int U = nsp+1;
+int P = nsp+2;
 
 
 // gas
 // the ratio of specific heats
 float gam = 1.4;
 
-// species weights (to come from OCEAN later)
-vector<float> wsp(nsp,1.e-3);
-
 // time       
 // t is the number of time steps
-int t = 15000;
+int t = 1500;
 
 // dt is the size of the time step
 float dt = 1.e-7;
@@ -112,7 +107,6 @@ vector<float> x(m);
 	}
 
 // the area function
-
 vector<float> A(m,1.0f);
 
 	for (int i =0; i<m; i++){
@@ -121,14 +115,13 @@ vector<float> A(m,1.0f);
 
 
 // the inlet boundary condition
-vector<float> rho1(nsp,1e-3);
+vector<float> rho1(nsp,0e-3);
 float u1   = 3500;
 float p1   = 2620;
 float Tv1  =  500;
 
-rho1[0] = 2e-4;
-rho1[1] = 5e-4;
-rho1[2] = 3e-4;
+// N2
+rho1[3] = 3e-2;
 
 // the flow vector
 // q(N,M,T)
@@ -139,12 +132,12 @@ rho1[2] = 3e-4;
 FlowField q(nv,m,t);
 
 // initialise the flow field
-
 	for (int i =0; i<m; i++){
 		for (int k= 0; k<t; k++){
 			for (int j=0; j<nsp; j++){
 			q(j,i,k) = rho1[j];
 			}
+			q(V,i,k) =  Tv1;
 			q(U,i,k) =   u1;
 			q(P,i,k) =   p1;
 		}
@@ -152,7 +145,6 @@ FlowField q(nv,m,t);
 
 
 // Euler updates
-
 float dx;
 float dA;
 float du;
@@ -164,15 +156,16 @@ vector<float> drho(nsp);
 float pe = 0.0;  // the electron pressure
 float cvv = 200.0; // the vibrational specific heat at constant volume
 
-
+	// loop through time
 	for (int k = 0; k<t-1; k++){
 		// inlet condition
 		for (int j=0; j<nsp; j++){
 		q(j,0,k) = rho1[j];	
 		}
+		q(V,0,k) =   Tv1;	
 		q(U,0,k) =   u1;	
 		q(P,0,k) =   p1;                              
-
+	 	// loop through space
 		for (int i = 1; i<m; i++){
 		dx   = x[i] - x[i-1];
 		dA   = A[i] - A[i-1];
@@ -184,6 +177,16 @@ float cvv = 200.0; // the vibrational specific heat at constant volume
 		dTv  = q(V,i,k) - q(V,i-1,k);
 		du   = q(U,i,k) - q(U,i-1,k);
 		dp   = q(P,i,k) - q(P,i-1,k);
+		
+		// get the non-equilibrium source terms
+		for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
+		qp[V] = q(V,i,k);
+		qp[U] = q(U,i,k);
+		qp[P] = q(P,i,k);
+
+		src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
+
+		for (int o = 0; o < P+1; o++){q(o,i,k)+=f[o];}
 
 		// continuity update
 		for (int j=0; j<nsp; j++){

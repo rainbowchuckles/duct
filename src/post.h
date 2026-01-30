@@ -85,7 +85,7 @@ void write_cl(
     vector<float> x,
     int t,
     int nsp,
-    vector<float> wsp,
+    double wsp[NSPMAX],
     const std::string& filename
 ) {
     float tt;

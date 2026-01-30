@@ -39,18 +39,19 @@ c ... arguments
 c ... local symbols
 
 c ... file paths
-
-      chmf     = '../../slime/in/thermo/Park94/chemkin_mars.dat' 
-      rcnf     = '../../slime/in/thermo/Park94/reactions_park94.dat' 
-      mw_file  = '../../slime/in/thermo/Park94/mw_millikan_park94.dat' 
-      cs_file  = '../../slime/in/thermo/Park94/cs_park94.dat' 
-      mst_file = '../../slime/in/thermo/Park94/tbr_park94.dat' 
-      diss_file= '../../slime/in/thermo/Park94/diss_gnoffo89_park94.dat' 
-      ion_file = '../../slime/in/thermo/Park94/ion_gnoffo89_park94.dat' 
-      apb_file = '../../slime/in/thermo/Park94/' //
-     &           'e_neu_cs_gnoffo89_park94.dat'
+      chmf     = '../../slime/in/thermo/park93-6sp/chemkin_o2_n2.dat' 
+      rcnf     = '../../slime/in/thermo/park93-6sp/'//
+     &           'reactions_park93_o2_n2.dat' 
+      mw_file  = '../../slime/in/thermo/park93-6sp/'//
+     &           'mw_millikan_o2_n2.dat' 
+      cs_file  = '../../slime/in/thermo/park93-6sp/cs_o2_n2.dat' 
+      mst_file = '../../slime/in/thermo/park93-6sp/tbr_park93_o2_n2.dat' 
+      diss_file= '../../slime/in/thermo/park93-6sp/diss_o2_n2.dat' 
+      ion_file = '../../slime/in/thermo/park93-6sp/'//
+     &           'ion_gnoffo89_o2_n2.dat' 
+      apb_file = '../../slime/in/thermo/park93-6sp/e_neu_cs_o2_n2.dat'
       thrf     = '../../slime/in/thermo/thermo.inp' 
-      colpth   = '../../slime/in/thermo/bin/omg_dodgy/' 
+      colpth   = '../../slime/in/thermo/bin/omg_beta/'
 
 c ... executable statements
 
@@ -88,10 +89,26 @@ c ... read reactions file(s)
       print *, '---------------------'
       print *, ' '
 
+      nsp_c = nsp
       nelsp_c = nelsp
       ielsp_c = ielsp
       melsp_c = melsp
       wsp_c = wsp  
+      rsp_c = rsp  
+      asp_c = asp  
+      hfsp_c = hfsp  
+      mw_c = mw  
+      cs_c = cs  
+      diss_c = diss  
+      inz_c = inz  
+      apb_c = apb  
+      nrn_c = nrn  
+      nsprn_c = nsprn  
+      isprn_c = isprn  
+      msprn_c = msprn  
+      ktbrn_c = ktbrn  
+      xtbrn_c = xtbrn  
+      arr_c = arr  
 
       return
 
