@@ -88,7 +88,7 @@ float gam = 1.4;
 int t = 1500;
 
 // dt is the size of the time step
-float dt = 1.e-7;
+float dt = 1.e-6;
 
 // grid
 // m is the number of grid points
@@ -109,9 +109,9 @@ vector<float> x(m);
 // the area function
 vector<float> A(m,1.0f);
 
-	for (int i =0; i<m; i++){
-		A[i] = A[i] + 4.64*static_cast<float>(i)/m;
-			}
+//	for (int i =0; i<m; i++){
+//		A[i] = A[i] + 4.64*static_cast<float>(i)/m;
+//			}
 
 
 // the inlet boundary condition
@@ -120,8 +120,10 @@ float u1   = 3500;
 float p1   = 2620;
 float Tv1  =  500;
 
-// N2
-rho1[3] = 3e-2;
+//   
+rho1[1] = 3e-4;
+rho1[3] = 3e-4;
+rho1[5] = 3e-4;
 
 // the flow vector
 // q(N,M,T)
@@ -153,7 +155,7 @@ float dTv;
 float rho = 0;
 vector<float> drho(nsp);
 
-float pe = 0.0;  // the electron pressure
+float pe = 1.0;  // the electron pressure
 float cvv = 200.0; // the vibrational specific heat at constant volume
 
 	// loop through time
@@ -186,7 +188,8 @@ float cvv = 200.0; // the vibrational specific heat at constant volume
 
 		src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
 
-		for (int o = 0; o < P+1; o++){q(o,i,k)+=f[o];}
+		cout << i << " " << k << " " <<  qp[V] << " " << f[V] << endl;
+		for (int o = 0; o < P+1; o++){q(o,i,k)-=f[o]*dt;}
 
 		// continuity update
 		for (int j=0; j<nsp; j++){
