@@ -8,28 +8,73 @@
 #include "gas.h"
 #include "post.h"
 
-extern "C" void tcw_c(int *nsp, double *nelsp, double *ielsp, double *melsp, double *wsp);
+// Park vars
 
+#define NELMAX 8
+#define NSPMAX 64
+#define NTRMAX 4
+#define NACOEF 12
+#define NRNMAX 128
+
+extern "C" void tcw_c(int *nsp, double *nelsp, double ielsp[][NSPMAX], double melsp[][NSPMAX], 
+		      double *wsp,
+		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double *hfsp, double mw[][NSPMAX][NSPMAX], 
+		      double cs[][NSPMAX][NSPMAX],
+		      double *diss, double *inz, double apb[][NSPMAX], int *nrn, int nsprn[][NRNMAX], 
+		      int isprn[][NRNMAX], int msprn[][NRNMAX], int *ktbrn, int xtbrn[][NRNMAX], 
+		      double arr[][NSPMAX]);
+
+extern "C" void src_c(int *nsp, double *nelsp, double ielsp[][NSPMAX], double melsp[][NSPMAX], 
+		      double *wsp,
+		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double *hfsp, double mw[][NSPMAX][NSPMAX], 
+		      double cs[][NSPMAX][NSPMAX],
+		      double *diss, double *inz, double apb[][NSPMAX], int *nrn, int nsprn[][NRNMAX], 
+		      int isprn[][NRNMAX], int msprn[][NRNMAX], int *ktbrn, int xtbrn[][NRNMAX], 
+		      double arr[][NSPMAX], double *q, double *f);
 using namespace std;
 
 // the main program
 
 int main() {
+
+
+double nelsp[NSPMAX];
+double ielsp[NELMAX][NSPMAX];
+double melsp[NELMAX][NSPMAX];
+double wwsp[NSPMAX]; // Fix
+double rsp[4][NSPMAX];
+double asp[NACOEF][NTRMAX][NSPMAX];
+double hfsp[NSPMAX];
+double mw[3][NSPMAX][NSPMAX];
+double cs[2][NSPMAX][NSPMAX];
+double diss[NSPMAX];
+double inz[NSPMAX];
+double apb[3][NSPMAX];
+int    nrn[2];
+int    nsprn[4][NRNMAX];
+int    isprn[NSPMAX][NRNMAX];
+int    msprn[NSPMAX][NRNMAX];
+int    ktbrn[NSPMAX];
+int    xtbrn[NSPMAX][NRNMAX];
+double arr[64][NSPMAX];
+
 // species
-int nsp = 3;
+int nsp =12;
 int nv  = nsp + 3;
 int V = nsp;
 int U = nsp+1;
 int P = nsp+2;
 
-vector<double> nelsp(64);
-vector<double> ielsp(64);
-vector<double> melsp(64);
-vector<double> wwsp(64);
+// bs for src
+double qp[NSPMAX];
+double f[NSPMAX];
 
-tcw_c(&nsp,nelsp.data(),ielsp.data(),melsp.data(),wwsp.data());
-for (int i=0; i<32; i++){
-cout << wwsp[i] << endl;}
+tcw_c(&nsp,nelsp,ielsp,melsp,wwsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
+src_c(&nsp,nelsp,ielsp,melsp,wwsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
+
+for (int i=0; i<32; i++){cout << wwsp[i] << endl;}
+
+
 exit(0);
 
 
@@ -38,22 +83,27 @@ exit(0);
 // gas
 // the ratio of specific heats
 float gam = 1.4;
+
 // species weights (to come from OCEAN later)
 vector<float> wsp(nsp,1.e-3);
 
 // time       
 // t is the number of time steps
 int t = 15000;
+
 // dt is the size of the time step
 float dt = 1.e-7;
 
 // grid
 // m is the number of grid points
 int m = 400;
+
 // l is the length of the domain
 float l = 2.2;
+
 // x is the vector of physical grid locations
 vector<float> x(m);
+
 // populate the grid vector
 	for (int i = 0; i < m; i++){
 		x[i] = i/static_cast<float>(m);

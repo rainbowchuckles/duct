@@ -21,7 +21,7 @@ FOBJ := $(FSRC:.F=.o)
 all: $(TARGET)
 
 # Libraries
-LIBS= /home/joesteer/lib/libocean.a
+LIBS= /home/joesteer/lib/libocean.a /home/joesteer/lib/llasta2.a -llapack -lblas
 
 # Link step - use g++ as the linker and add Fortran runtime libraries
 # Order: C++ objects, Fortran objects, external libs, Fortran runtime libs

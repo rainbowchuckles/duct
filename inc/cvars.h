@@ -3,18 +3,20 @@
  	real(c_double)                :: ielsp_c(NELMAX,NSPMAX)
  	real(c_double)                :: melsp_c(NELMAX,NSPMAX)
  	real(c_double)                :: wsp_c(NSPMAX)
- 	integer(c_int), intent(inout) :: rsp_c
- 	integer(c_int), intent(inout) :: asp_c
- 	integer(c_int), intent(inout) :: hfsp_c
- 	integer(c_int), intent(inout) :: mw_c
- 	integer(c_int), intent(inout) :: cs_c
- 	integer(c_int), intent(inout) :: diss_c
- 	integer(c_int), intent(inout) :: inz_c
- 	integer(c_int), intent(inout) :: apb_c
- 	integer(c_int), intent(inout) :: nrn_c
- 	integer(c_int), intent(inout) :: nsprn_c
- 	integer(c_int), intent(inout) :: isprn_c
- 	integer(c_int), intent(inout) :: msprn_c
- 	integer(c_int), intent(inout) :: ktbrn_c
- 	integer(c_int), intent(inout) :: xtbrn_c
- 	integer(c_int), intent(inout) :: arr_c
+ 	real(c_double)                :: rsp_c(4,NSPMAX)
+ 	real(c_double)                :: asp_c(NACOEF,NTRMAX,NSPMAX)
+ 	real(c_double)                :: hfsp_c(NSPMAX)
+ 	real(c_double)                :: mw_c(3,NSPMAX,NSPMAX)
+ 	real(c_double)                :: cs_c(2,NSPMAX,NSPMAX)
+ 	real(c_double)                :: diss_c(NSPMAX)
+ 	real(c_double)                :: inz_c(NSPMAX)
+ 	real(c_double)                :: apb_c(3,NSPMAX)
+ 	integer(c_int), intent(inout) :: nrn_c(2)
+ 	integer(c_int), intent(inout) :: nsprn_c(4,NRNMAX)
+ 	integer(c_int), intent(inout) :: isprn_c(NSPMAX,NRNMAX)
+ 	integer(c_int), intent(inout) :: msprn_c(NSPMAX,NRNMAX)
+ 	integer(c_int), intent(inout) :: ktbrn_c(NRNMAX)
+ 	integer(c_int), intent(inout) :: xtbrn_c(NSPMAX,NRNMAX)
+ 	real(c_double)                :: arr_c(64,NSPMAX)
+ 	real(c_double)                :: qp_c(NSPMAX)
+ 	real(c_double)                :: f_c(NSPMAX)
