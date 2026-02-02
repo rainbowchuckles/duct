@@ -109,7 +109,8 @@ c ... read reactions file(s)
       ktbrn_c = ktbrn  
       xtbrn_c = xtbrn  
       arr_c = arr  
-
+      write(*,*) nelsp_c
+      stop
       return
 
       end

@@ -1,5 +1,5 @@
  	integer(c_int), intent(inout) :: nsp_c
- 	integer(c_int)                :: nelsp_c(NSPMAX)
+ 	integer(c_int), intent(inout) :: nelsp_c(NSPMAX)
  	integer(c_int)                :: ielsp_c(NELMAX,NSPMAX)
  	integer(c_int)                :: melsp_c(NELMAX,NSPMAX)
  	real(c_double)                :: wsp_c(NSPMAX)

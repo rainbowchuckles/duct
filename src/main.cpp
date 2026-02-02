@@ -17,20 +17,20 @@
 #include "post.h"
 
 
-extern "C" void tcw_c(int *nsp, double *nelsp, double ielsp[][NSPMAX], double melsp[][NSPMAX], 
-		      double *wsp,
-		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double *hfsp, double mw[][NSPMAX][NSPMAX], 
+extern "C" void tcw_c(int *nsp, double nelsp[NSPMAX], double ielsp[][NSPMAX], double melsp[][NSPMAX], 
+		      double wsp[NSPMAX],
+		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double hfsp[NSPMAX], double mw[][NSPMAX][NSPMAX], 
 		      double cs[][NSPMAX][NSPMAX],
-		      double *diss, double *inz, double apb[][NSPMAX], int *nrn, int nsprn[][NRNMAX], 
-		      int isprn[][NRNMAX], int msprn[][NRNMAX], int *ktbrn, int xtbrn[][NRNMAX], 
+		      double *diss, double *inz, double apb[][NSPMAX], int nrn[2], int nsprn[][NRNMAX], 
+		      int isprn[][NRNMAX], int msprn[][NRNMAX], int ktbrn[NRNMAX], int xtbrn[][NRNMAX], 
 		      double arr[][NSPMAX]);
 
 extern "C" void src_c(int *nsp, double nelsp[NSPMAX], double ielsp[][NSPMAX], double melsp[][NSPMAX], 
-		      double *wsp,
-		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double *hfsp, double mw[][NSPMAX][NSPMAX], 
+		      double wsp[NSPMAX],
+		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double hfsp[NSPMAX], double mw[][NSPMAX][NSPMAX], 
 		      double cs[][NSPMAX][NSPMAX],
-		      double *diss, double *inz, double apb[][NSPMAX], int *nrn, int nsprn[][NRNMAX], 
-		      int isprn[][NRNMAX], int msprn[][NRNMAX], int *ktbrn, int xtbrn[][NRNMAX], 
+		      double *diss, double *inz, double apb[][NSPMAX], int nrn[2], int nsprn[][NRNMAX], 
+		      int isprn[][NRNMAX], int msprn[][NRNMAX], int ktbrn[NRNMAX], int xtbrn[][NRNMAX], 
 	    	      double arr[][NSPMAX], double *q, double *f);
 
 using namespace std;
