@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <vector>
 #include <cassert>
+#include <cmath>
 #include <fstream>
 
 // variable definitions
@@ -37,7 +38,6 @@ int P = nsp+2;
 
 
 // read the user input file
-
 read_input_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1);
 
 // x is the vector of physical grid locations
@@ -59,8 +59,8 @@ for (int i =0; i<m; i++){
 
 // e- N O N2 NO O2  
 vector<float> rho1(nsp,0e-3);
-rho1[3] = 1e-3;
-rho1[5] = 1e-3;
+rho1[3] = 3e-3;
+rho1[5] = 3e-3;
 
 // the flow vector
 // q(N,M,T)
@@ -91,6 +91,7 @@ float du;
 float dp;
 float dTv;
 float rho = 0;
+float conv;
 vector<float> drho(nsp);
 
 float pe = 0.0;  // the electron pressure
@@ -99,14 +100,18 @@ float cvv = 200.0; // the vibrational specific heat at constant volume
 // loop through time
 for (int k = 0; k<t-1; k++){
 	// print some indication of progress to the terminal
-	if (k % 50 == 0){cout << k << endl;}
+	if (k % 50 == 0 || k ==0 ){
+		cout << k << " " << k*dt <<  endl;
+		conv = q(V,m-1,k);	
+	}
 	// inlet condition
 	for (int j=0; j<nsp; j++){
 	q(j,0,k) = rho1[j];	
 	}
 	q(V,0,k) =   Tv1;	
 	q(U,0,k) =   u1;	
-	q(P,0,k) =   p1;                              
+	q(P,0,k) =   p1;                             
+       	
  	// loop through space
 	for (int i = 1; i<m; i++){
 	dx   = x[i] - x[i-1];
@@ -172,6 +177,10 @@ for (int k = 0; k<t-1; k++){
 	for (int o = 0; o < P+1; o++){q(o,i,k)= q(o,i,k)-f[o]*dt;}
 	}
 	}
+
+	// check if steady state has been reached, exit if so
+	// decide based on the exit Tv     y 
+	if (abs(q(V,m-1,k) - conv) < 1e-6 && k > 1500){break;} 
 }
 write_cl( q, m, x, t, nsp, wsp, "../out/cl.dat");
 
