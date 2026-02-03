@@ -1,0 +1,11 @@
+- Input files
+- Write every nth timestep
+- Bail out early if steady state
+- General clean up of main
+- Proper write out to terminal
+- Restart?
+- Proper write out header
+- Transient input
+- Cvv and electron pressure term
+- Get real gamma
+- Validation

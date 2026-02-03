@@ -119,3 +119,50 @@ void write_cl(
 
     file.close();
 }
+
+
+#include <fstream>
+#include <string>
+#include <stdexcept>
+
+void read_input_file(char** filename,
+                     float& gam,
+                     int&   t,
+                     float& dt,
+                     int&   m,
+                     float& l,
+                     float& u1,
+                     float& p1,
+		     float& Tv1)
+{
+    // filename points to a C-string (e.g. argv + 1), so dereference it:
+    const char* fname = *filename;      // same as filename[0]
+    std::ifstream file(fname);
+    if (!file) {
+        throw std::runtime_error(std::string("Could not open input file: ") + fname);
+    }
+
+    float value;
+    std::string name;
+
+    while (file >> value >> name) {
+        if (name == "gam") {
+            gam = value;
+        } else if (name == "t") {
+            t = static_cast<int>(value);
+        } else if (name == "dt") {
+            dt = value;
+        } else if (name == "m") {
+            m = static_cast<int>(value);
+        } else if (name == "l") {
+            l = value;
+        } else if (name == "u1") {
+            u1 = value;
+        } else if (name == "p1") {
+            p1 = value;
+        } else if (name == "Tv1") {
+            Tv1 = value;
+        }
+    }
+}
+
