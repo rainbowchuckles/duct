@@ -141,7 +141,7 @@ int nsp = 1;
 double qp[NSPMAX];
 double f[NSPMAX];
 
-// Retreive thermo stuff
+// Retrieve thermo stuff
 tcw_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
 
 // species
@@ -156,10 +156,10 @@ float gam = 1.4;
 
 // time       
 // t is the number of time steps
-int t = 2500;
+int t = 3500;
 
 // dt is the size of the time step
-float dt = 1.e-6;
+float dt = 1.0e-6;
 
 // grid
 // m is the number of grid points
@@ -188,11 +188,12 @@ vector<float> A(m,1.0f);
 // the inlet boundary condition
 vector<float> rho1(nsp,0e-3);
 float u1   = 3500;
-float p1   = 2620;
+float p1   = 7000;
 float Tv1  = 2500;
 
 // e- N O N2 NO O2  
 rho1[3] = 1e-3;
+rho1[5] = 1e-3;
 
 // the flow vector
 // q(N,M,T)
