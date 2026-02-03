@@ -4,7 +4,7 @@ FXX := gfortran
 
 # Flags
 CXXFLAGS := -std=c++17 -Wall -Wextra
-FXXFLAGS := -I ../inc
+FXXFLAGS := -g -fcheck=all -fbacktrace -I ../inc
 
 # Target
 TARGET := a.out

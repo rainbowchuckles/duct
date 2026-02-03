@@ -16,22 +16,97 @@
 #include "gas.h"
 #include "post.h"
 
+extern "C" void tcw_c(
+    int *nsp,
 
-extern "C" void tcw_c(int *nsp, double nelsp[NSPMAX], double ielsp[][NSPMAX], double melsp[][NSPMAX], 
-		      double wsp[NSPMAX],
-		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double hfsp[NSPMAX], double mw[][NSPMAX][NSPMAX], 
-		      double cs[][NSPMAX][NSPMAX],
-		      double *diss, double *inz, double apb[][NSPMAX], int nrn[2], int nsprn[][NRNMAX], 
-		      int isprn[][NRNMAX], int msprn[][NRNMAX], int ktbrn[NRNMAX], int xtbrn[][NRNMAX], 
-		      double arr[][NSPMAX]);
+    double nelsp[NSPMAX],
 
-extern "C" void src_c(int *nsp, double nelsp[NSPMAX], double ielsp[][NSPMAX], double melsp[][NSPMAX], 
-		      double wsp[NSPMAX],
-		      double rsp[][NSPMAX], double asp[][NTRMAX][NSPMAX], double hfsp[NSPMAX], double mw[][NSPMAX][NSPMAX], 
-		      double cs[][NSPMAX][NSPMAX],
-		      double *diss, double *inz, double apb[][NSPMAX], int nrn[2], int nsprn[][NRNMAX], 
-		      int isprn[][NRNMAX], int msprn[][NRNMAX], int ktbrn[NRNMAX], int xtbrn[][NRNMAX], 
-	    	      double arr[][NSPMAX], double *q, double *f);
+    // Fortran: ielsp(NELMAX, NSPMAX)
+    double ielsp[NSPMAX][NELMAX],
+
+    // Fortran: melsp(NELMAX, NSPMAX)
+    double melsp[NSPMAX][NELMAX],
+
+    double wsp[NSPMAX],
+
+    // Fortran: rsp(4, NSPMAX)
+    double rsp[NSPMAX][4],
+
+    // Fortran: asp(NACOEF, NTRMAX, NSPMAX)
+    double asp[NSPMAX][NTRMAX][NACOEF],
+
+    double hfsp[NSPMAX],
+
+    // Fortran: mw(3, NSPMAX, NSPMAX)
+    double mw[NSPMAX][NSPMAX][3],
+
+    // Fortran: cs(2, NSPMAX, NSPMAX)
+    double cs[NSPMAX][NSPMAX][2],
+
+    double *diss,
+    double *inz,
+
+    // Fortran: apb(3, NSPMAX)
+    double apb[NSPMAX][3],
+
+    int nrn[2],
+
+    // Fortran: nsprn(4, NRNMAX)
+    int nsprn[NRNMAX][4],
+
+    // Fortran: isprn(NSPMAX, NRNMAX)
+    int isprn[NRNMAX][NSPMAX],
+
+    // Fortran: msprn(NSPMAX, NRNMAX)
+    int msprn[NRNMAX][NSPMAX],
+
+    // Fortran: ktbrn(NRNMAX)
+    int ktbrn[NRNMAX],
+
+    // Fortran: xtbrn(NSPMAX, NRNMAX)
+    int xtbrn[NRNMAX][NSPMAX],
+
+    // Fortran: arr(64, NSPMAX)
+    double arr[NSPMAX][64]
+);
+
+extern "C" void src_c(
+    int *nsp,
+
+    double nelsp[NSPMAX],
+
+    double ielsp[NSPMAX][NELMAX],
+    double melsp[NSPMAX][NELMAX],
+
+    double wsp[NSPMAX],
+
+    double rsp[NSPMAX][4],
+    double asp[NSPMAX][NTRMAX][NACOEF],
+
+    double hfsp[NSPMAX],
+
+    double mw[NSPMAX][NSPMAX][3],
+    double cs[NSPMAX][NSPMAX][2],
+
+    double *diss,
+    double *inz,
+
+    double apb[NSPMAX][3],
+
+    int nrn[2],
+    int nsprn[NRNMAX][4],
+    int isprn[NRNMAX][NSPMAX],
+    int msprn[NRNMAX][NSPMAX],
+
+    int ktbrn[NRNMAX],
+    int xtbrn[NRNMAX][NSPMAX],
+
+    double arr[NSPMAX][64],
+
+    double *q,
+    double *f
+);
+
 
 using namespace std;
 
@@ -39,29 +114,28 @@ using namespace std;
 
 int main() {
 
-
 double nelsp[NSPMAX];
-double ielsp[NELMAX][NSPMAX];
-double melsp[NELMAX][NSPMAX];
+double ielsp[NSPMAX][NELMAX];
+double melsp[NSPMAX][NELMAX];
 double wsp[NSPMAX]; // Fix
-double rsp[4][NSPMAX];
-double asp[NACOEF][NTRMAX][NSPMAX];
+double rsp[NSPMAX][4];
+double asp[NSPMAX][NTRMAX][NACOEF];
 double hfsp[NSPMAX];
-double mw[3][NSPMAX][NSPMAX];
-double cs[2][NSPMAX][NSPMAX];
+double mw[NSPMAX][NSPMAX][3];
+double cs[NSPMAX][NSPMAX][2];
 double diss[NSPMAX];
 double inz[NSPMAX];
-double apb[3][NSPMAX];
+double apb[NSPMAX][3];
 int    nrn[2];
-int    nsprn[4][NRNMAX];
-int    isprn[NSPMAX][NRNMAX];
-int    msprn[NSPMAX][NRNMAX];
-int    ktbrn[NSPMAX];
-int    xtbrn[NSPMAX][NRNMAX];
-double arr[64][NSPMAX];
+int    nsprn[NRNMAX][4];
+int    isprn[NRNMAX][NSPMAX];
+int    msprn[NRNMAX][NSPMAX];
+int    ktbrn[NRNMAX];
+int    xtbrn[NRNMAX][NSPMAX];
+double arr[NSPMAX][64];
 
 // species
-int nsp;
+int nsp = 1;
 
 // bs for src
 double qp[NSPMAX];
@@ -70,14 +144,11 @@ double f[NSPMAX];
 // Retreive thermo stuff
 tcw_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
 
-//src_c(&nsp,nelsp,ielsp,melsp,wwsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
-//
 // species
 int nv  = nsp + 3;
 int V = nsp;
 int U = nsp+1;
 int P = nsp+2;
-
 
 // gas
 // the ratio of specific heats
@@ -85,7 +156,7 @@ float gam = 1.4;
 
 // time       
 // t is the number of time steps
-int t = 1500;
+int t = 2500;
 
 // dt is the size of the time step
 float dt = 1.e-6;
@@ -118,12 +189,10 @@ vector<float> A(m,1.0f);
 vector<float> rho1(nsp,0e-3);
 float u1   = 3500;
 float p1   = 2620;
-float Tv1  =  500;
+float Tv1  = 2500;
 
-//   
-rho1[1] = 3e-4;
-rho1[3] = 3e-4;
-rho1[5] = 3e-4;
+// e- N O N2 NO O2  
+rho1[3] = 1e-3;
 
 // the flow vector
 // q(N,M,T)
@@ -155,11 +224,13 @@ float dTv;
 float rho = 0;
 vector<float> drho(nsp);
 
-float pe = 1.0;  // the electron pressure
+float pe = 0.0;  // the electron pressure
 float cvv = 200.0; // the vibrational specific heat at constant volume
 
 	// loop through time
 	for (int k = 0; k<t-1; k++){
+		// print some indication of progress to the terminal
+		if (k % 50 == 0){cout << k << endl;}
 		// inlet condition
 		for (int j=0; j<nsp; j++){
 		q(j,0,k) = rho1[j];	
@@ -180,17 +251,6 @@ float cvv = 200.0; // the vibrational specific heat at constant volume
 		du   = q(U,i,k) - q(U,i-1,k);
 		dp   = q(P,i,k) - q(P,i-1,k);
 		
-		// get the non-equilibrium source terms
-		for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
-		qp[V] = q(V,i,k);
-		qp[U] = q(U,i,k);
-		qp[P] = q(P,i,k);
-
-		src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
-
-		cout << i << " " << k << " " <<  qp[V] << " " << f[V] << endl;
-		for (int o = 0; o < P+1; o++){q(o,i,k)-=f[o]*dt;}
-
 		// continuity update
 		for (int j=0; j<nsp; j++){
 		q(j,i,k+1)  = dA/dx;         
@@ -229,6 +289,19 @@ float cvv = 200.0; // the vibrational specific heat at constant volume
 		q(P,i,k+1) *= dt;              
 		
 		q(P,i,k+1) = q(P,i,k) - q(P,i,k+1);              
+		
+		// get the non-equilibrium source terms
+		// only introduce them after the flow is steady
+		if (k > 1500){
+		for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
+		qp[V] = q(V,i,k);
+		qp[U] = q(U,i,k);
+		qp[P] = q(P,i,k);
+		
+		src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
+
+		for (int o = 0; o < P+1; o++){q(o,i,k)= q(o,i,k)-f[o]*dt;}
+		}
 		}
 	}
 	write_cl( q, m, x, t, nsp, wsp, "../out/cl.dat");

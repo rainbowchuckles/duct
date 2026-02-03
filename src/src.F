@@ -59,7 +59,7 @@ c ... executable statements
      1          nrn_c,nsprn_c,isprn_c,msprn_c,ktbrn_c,xtbrn_c, 
      1          arr_c,t_eq,qp_c,qp_c,rd,f_c,df0,df1,g0,dg0,
      1          dg1,dr,i,k,
-     1          dt,qp_c,flg, .false., 0.3,frlx,tau)
+     1          dt,qp_c,flg, .true., 0.35d0,frlx,tau)
       return 
 
       end

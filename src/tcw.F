@@ -18,7 +18,6 @@ c ... include
 #     include <vars.h>
 #     include <park/sizes.h>
 #     include <parkvars.h>
-#     include <ocean000.h>
 #     include <def.h>
 #     include <cvars.h>
 
@@ -37,6 +36,8 @@ c ... arguments
       character*NFL       mst_file
 
 c ... local symbols
+
+      integer             i
 
 c ... file paths
       chmf     = '../../slime/in/thermo/park93-6sp/chemkin_o2_n2.dat' 
@@ -105,12 +106,11 @@ c ... read reactions file(s)
       nrn_c = nrn  
       nsprn_c = nsprn  
       isprn_c = isprn  
-      msprn_c = msprn  
+      msprn_c = msprn 
       ktbrn_c = ktbrn  
       xtbrn_c = xtbrn  
       arr_c = arr  
-      write(*,*) nelsp_c
-      stop
+
       return
 
       end
