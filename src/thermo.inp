@@ -1,10 +1,12 @@
-../../slime/in/thermo/park93-6sp/chemkin_o2_n2.dat           chmf       
-../../slime/in/thermo/park93-6sp/reactions_park93_o2_n2.dat  rcnf      
-../../slime/in/thermo/park93-6sp/mw_millikan_o2_n2.dat       mw_file   
-../../slime/in/thermo/park93-6sp/cs_o2_n2.dat                cs_file   
-../../slime/in/thermo/park93-6sp/tbr_park93_o2_n2.dat        mst_file  
-../../slime/in/thermo/park93-6sp/diss_o2_n2.dat              diss_file 
-../../slime/in/thermo/park93-6sp/ion_gnoffo89_o2_n2.dat      ion_file  
-../../slime/in/thermo/park93-6sp/e_neu_cs_o2_n2.dat          apb_file  
-../../slime/in/thermo/thermo.inp                             thrf      
-../../slime/in/thermo/bin/omg_beta/                          colpth    
+&chem
+  chmf     = '../../slime/in/thermo/park93-6sp/chemkin_o2_n2.dat',
+  rcnf     = '../../slime/in/thermo/park93-6sp/reactions_park93_o2_n2.dat',
+  mw_file  = '../../slime/in/thermo/park93-6sp/mw_millikan_o2_n2.dat',
+  cs_file  = '../../slime/in/thermo/park93-6sp/cs_o2_n2.dat',
+  mst_file = '../../slime/in/thermo/park93-6sp/tbr_park93_o2_n2.dat',
+  diss_file= '../../slime/in/thermo/park93-6sp/diss_o2_n2.dat',
+  ion_file = '../../slime/in/thermo/park93-6sp/ion_gnoffo89_o2_n2.dat',
+  apb_file = '../../slime/in/thermo/park93-6sp/e_neu_cs_o2_n2.dat'
+  thrf     = '../../slime/in/thermo/thermo.inp',
+  colpth   = '../../slime/in/thermo/bin/omg_beta/'
+/

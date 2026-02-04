@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <fstream>
+#include <cstring>
 
 // variable definitions
 #include "size.h"
@@ -27,10 +28,10 @@ int main(int argc, char** argv) {
 
 // initialise the non-equilibrium model
 // tcw_c is a wrapper for the OCEAN Fortran functions in tcw.F
-read_thermo_files(argv + 2, chmf, rcnf, mw_file, cs_file, mst_file, diss_file, ion_file, apb_file, thrf, colpth);
-cout << chmf << endl;
-tcw_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,
-		  chmf,rcnf,mw_file,cs_file,mst_file,diss_file,ion_file,apb_file,thrf,colpth);
+const char* inp = argv[2];
+int length = strlen(inp);
+
+tcw_c(inp,&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
 
 // nv is the number of variables
 // nsp species + Tv + u + p 
@@ -195,6 +196,8 @@ for (int k = 0; k<t-1; k++){
 // output the centerline profile to text
 post:
 write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
+cout << endl;
+cout << "Ran to completion. " << endl;
 
 
 return 0;

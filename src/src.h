@@ -1,4 +1,6 @@
 extern "C" void tcw_c(
+    const char* str,
+//    const int len,
     int *nsp,
 
     double nelsp[NSPMAX],
@@ -49,19 +51,7 @@ extern "C" void tcw_c(
     int xtbrn[NRNMAX][NSPMAX],
 
     // Fortran: arr(64, NSPMAX)
-    double arr[NSPMAX][64],
-
-    // The thermochemsitry read file    
-    string chmf, 
-    string rcnf,  
-    string mw_file, 
-    string cs_file,  
-    string mst_file,  
-    string diss_file,  
-    string ion_file,  
-    string apb_file,  
-    string thrf,  
-    string colpth 
+    double arr[NSPMAX][64]
 
 );
 
