@@ -40,9 +40,17 @@ int V   = nsp;
 int U   = nsp+1;
 int P   = nsp+2;
 
-
 // read the user input file
 read_input_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1, conv);
+
+cout << "Inlet conditions: " << endl;
+cout << endl;
+cout << "p: " << " " << p1 << endl;
+cout << "u: " << " " << u1 << endl;
+cout << "Tv:" << " " << Tv1 << endl;
+cout << endl;
+cout << "---------------------" << endl;
+cout << endl;
 
 // x is the vector of physical grid locations
 vector<float> x(m);
@@ -57,14 +65,13 @@ for (int i = 0; i < m; i++){
 vector<float> A(m,1.0f);
 
 for (int i =0; i<m; i++){
-	A[i] = A[i] + static_cast<float>(i)/m;
+	A[i] = A[i] + 4.2*static_cast<float>(i)/m;
 }
 
 
 // e- N O N2 NO O2  
 vector<float> rho1(nsp,0e-3);
-rho1[3] = 3e-3;
-rho1[5] = 3e-3;
+rho1[11] = 0.0076;
 
 // the flow vector
 // q(N,M,T)
@@ -100,6 +107,9 @@ int w;
 
 float pe = 0.0;  // the electron pressure
 float cvv = 200.0; // the vibrational specific heat at constant volume
+
+cout << "t, #  " << " " << "dt, s " << endl;
+cout << endl;
 
 // loop through time
 for (int k = 0; k<t-1; k++){

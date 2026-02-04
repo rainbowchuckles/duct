@@ -193,14 +193,21 @@ c ... read thermo.inp
 
       call thrd( nel,cel,ispel, nsp,csp,nelsp,ielsp,melsp,rsp,asp)
 
-c ... read reactions file(s)
       
+      print *, '---------------------'
       print *, ' '
-      print *, csp(:nsp)
+      print *, 'Species: '
+      print *, ' '
+      do i=1,nsp
+      print *, csp(i)
+      end do
+      print *, ' '
+      print *, '---------------------'
       print *, ' '
       print *, 'Reaction scheme: '
       print *, ' '
 
+c ... read reactions file(s)
       call rcrd(  nsp,csp,wsp, nelsp,ielsp,melsp,
      1                 nrn, msprn,nsprn,isprn,ktbrn,ntr,arr ,rcnf)
 

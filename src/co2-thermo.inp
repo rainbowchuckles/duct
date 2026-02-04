@@ -1,0 +1,12 @@
+&chem
+  chmf     = '../../slime/in/thermo/Park94-12sp/chemkin_mars.dat',
+  rcnf     = '../../slime/in/thermo/Park94-12sp/reactions_park94.dat',
+  mw_file  = '../../slime/in/thermo/Park94-12sp/mw_millikan_park94.dat',
+  cs_file  = '../../slime/in/thermo/Park94-12sp/cs_park94.dat',
+  mst_file = '../../slime/in/thermo/Park94-12sp/tbr_park94.dat',
+  diss_file= '../../slime/in/thermo/Park94-12sp/diss_gnoffo89_park94.dat',
+  ion_file = '../../slime/in/thermo/Park94-12sp/ion_gnoffo89_park94.dat',
+  apb_file = '../../slime/in/thermo/Park94-12sp/e_neu_cs_gnoffo89_park94.dat'
+  thrf     = '../../slime/in/thermo/thermo.inp',
+  colpth   = '../../slime/in/thermo/bin/omg_dodgy/',
+/
