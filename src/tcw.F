@@ -4,9 +4,11 @@ c     that initialise the thermochemistry
       subroutine tcw_c(nsp_c,nelsp_c,ielsp_c,melsp_c,wsp_c,rsp_c,
      1                 asp_c,hfsp_c,mw_c,cs_c,diss_c,inz_c,apb_c,
      2                 nrn_c,nsprn_c,isprn_c,msprn_c,ktbrn_c,xtbrn_c,
-     3                 arr_c) bind(C, name="tcw_c")
+     3                 arr_c,chmf_c,rcnf_c,mw_file_c,cs_file_c,
+     4                 mst_file_c,diss_file_c,ion_file_c,apb_file_c,
+     5                 thrf_c,colpth_c) bind(C, name="tcw_c")
 
-      use iso_c_binding, only: c_int, c_double
+      use iso_c_binding, only: c_int, c_double, c_char, c_null_char
 
       implicit none
 
@@ -23,23 +25,37 @@ c ... include
 
 c ... arguments
 
-      character*NFL       thrf,colpth
-      character*NFL       chmf
-      character*NFL       rcnf
       character*NFL       trnf
       character*NFL       cond
+      character*NFL       chmf
       character*NFL       mw_file
       character*NFL       cs_file
+      character*NFL       mst_file
       character*NFL       diss_file
       character*NFL       ion_file
       character*NFL       apb_file
-      character*NFL       mst_file
+      character*NFL       thrf
+      character*NFL       colpth
+      character*NFL       rcnf  
+
+      character(kind=c_char), dimension(*) :: chmf_c
+      character(kind=c_char), dimension(*) :: rcnf_c
+      character(kind=c_char), dimension(*) :: mw_file_c
+      character(kind=c_char), dimension(*) :: cs_file_c
+      character(kind=c_char), dimension(*) :: mst_file_c
+      character(kind=c_char), dimension(*) :: diss_file_c
+      character(kind=c_char), dimension(*) :: ion_file_c
+      character(kind=c_char), dimension(*) :: apb_file_c
+      character(kind=c_char), dimension(*) :: thrf_c
+      character(kind=c_char), dimension(*) :: colpth_c
 
 c ... local symbols
 
       integer             i
 
 c ... file paths
+       
+       write(*,*) chmf_c
       chmf     = '../../slime/in/thermo/park93-6sp/chemkin_o2_n2.dat' 
       rcnf     = '../../slime/in/thermo/park93-6sp/'//
      &           'reactions_park93_o2_n2.dat' 
@@ -110,7 +126,7 @@ c ... read reactions file(s)
       ktbrn_c = ktbrn  
       xtbrn_c = xtbrn  
       arr_c = arr  
-
+        stop
       return
 
       end

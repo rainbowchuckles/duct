@@ -133,7 +133,8 @@ void read_input_file(char** filename,
                      float& l,
                      float& u1,
                      float& p1,
-		     float& Tv1)
+		     float& Tv1,
+		     float& conv)
 {
     // filename points to a C-string (e.g. argv + 1), so dereference it:
     const char* fname = *filename;      // same as filename[0]
@@ -162,7 +163,56 @@ void read_input_file(char** filename,
             p1 = value;
         } else if (name == "Tv1") {
             Tv1 = value;
+        } else if (name == "conv") {
+            conv = value;
         }
     }
 }
 
+void read_thermo_files(char** filename,
+		       string &chmf,
+		       string &rcnf,
+		       string &mw_file,
+		       string &cs_file,
+		       string &mst_file,
+		       string &diss_file,
+		       string &ion_file,
+		       string &apb_file,
+		       string &thrf,
+		       string &colpth)
+{
+
+    // filename points to a C-string (e.g. argv + 1), so dereference it:
+    const char* fname = *filename;      // same as filename[0]
+    std::ifstream file(fname);
+    if (!file) {
+        throw std::runtime_error(std::string("Could not open input file: ") + fname);
+    }
+
+    std::string value;
+    std::string name;
+
+    while (file >> value >> name) {
+        if (name == "chmf") {
+            chmf = value.c_str();
+        } else if (name == "rcnf") {
+            rcnf = value;
+        } else if (name == "mw_file") {
+            mw_file = value;
+        } else if (name == "cs_file") {
+            cs_file = value;
+        } else if (name == "mst_file") {
+            mst_file = value;
+        } else if (name == "diss_file") {
+            diss_file = value;
+        } else if (name == "ion_file") {
+            ion_file = value;
+        } else if (name == "apb_file") {
+            apb_file = value;
+        } else if (name == "thrf") {
+            thrf = value;
+        } else if (name == "colpth") {
+            colpth = value;
+        }
+    }
+}

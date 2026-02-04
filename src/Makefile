@@ -3,7 +3,7 @@ CXX := g++
 FXX := gfortran
 
 # Flags
-CXXFLAGS := -std=c++17 -Wall -Wextra
+CXXFLAGS := -std=c++17 
 FXXFLAGS := -g -fcheck=all -fbacktrace -I ../inc
 
 # Target

@@ -57,3 +57,18 @@ float l;
 float u1;
 float p1;
 float Tv1;
+
+// solution controls
+float conv;
+
+// thermochemistry input files
+string chmf;
+string rcnf; 
+string mw_file;
+string cs_file; 
+string mst_file; 
+string diss_file; 
+string ion_file; 
+string apb_file; 
+string thrf; 
+string colpth;

@@ -27,18 +27,21 @@ int main(int argc, char** argv) {
 
 // initialise the non-equilibrium model
 // tcw_c is a wrapper for the OCEAN Fortran functions in tcw.F
-tcw_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
+read_thermo_files(argv + 2, chmf, rcnf, mw_file, cs_file, mst_file, diss_file, ion_file, apb_file, thrf, colpth);
+cout << chmf << endl;
+tcw_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,
+		  chmf,rcnf,mw_file,cs_file,mst_file,diss_file,ion_file,apb_file,thrf,colpth);
 
 // nv is the number of variables
 // nsp species + Tv + u + p 
 int nv  = nsp + 3;
-int V = nsp;
-int U = nsp+1;
-int P = nsp+2;
+int V   = nsp;
+int U   = nsp+1;
+int P   = nsp+2;
 
 
 // read the user input file
-read_input_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1);
+read_input_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1, conv);
 
 // x is the vector of physical grid locations
 vector<float> x(m);
@@ -91,8 +94,8 @@ float du;
 float dp;
 float dTv;
 float rho = 0;
-float conv;
 vector<float> drho(nsp);
+int w;
 
 float pe = 0.0;  // the electron pressure
 float cvv = 200.0; // the vibrational specific heat at constant volume
@@ -100,10 +103,11 @@ float cvv = 200.0; // the vibrational specific heat at constant volume
 // loop through time
 for (int k = 0; k<t-1; k++){
 	// print some indication of progress to the terminal
-	if (k % 50 == 0 || k ==0 ){
-		cout << k << " " << k*dt <<  endl;
-		conv = q(V,m-1,k);	
+	if (k % 50 == 0 || k == 0 ){
+		cout << setw(6) << k << " " 
+		     << setw(6) << setprecision(3) << scientific << k*dt << endl;
 	}
+
 	// inlet condition
 	for (int j=0; j<nsp; j++){
 	q(j,0,k) = rho1[j];	
@@ -144,6 +148,7 @@ for (int k = 0; k<t-1; k++){
 	q(V,i,k+1) /= rho*cvv;
 	q(V,i,k+1) += q(U,i,k)*dTv/dx;
 	q(V,i,k+1) *= dt;
+
 	q(V,i,k+1) = q(V,i,k) - q(V,i,k+1);
 
 	// momentum update
@@ -176,13 +181,20 @@ for (int k = 0; k<t-1; k++){
 
 	for (int o = 0; o < P+1; o++){q(o,i,k)= q(o,i,k)-f[o]*dt;}
 	}
+	// check if steady state has been reached, exit if so
+	// decide based on the exit Tv
+	if (k % 50 == 0 && k > 1600){
+		if (abs(q(V,m-1,k) - q(V,m-1,k-100)) < conv){	
+			w = k;
+			goto post;} 
+	}
 	}
 
-	// check if steady state has been reached, exit if so
-	// decide based on the exit Tv     y 
-	if (abs(q(V,m-1,k) - conv) < 1e-6 && k > 1500){break;} 
 }
-write_cl( q, m, x, t, nsp, wsp, "../out/cl.dat");
+
+// output the centerline profile to text
+post:
+write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
 
 
 return 0;

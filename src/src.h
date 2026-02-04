@@ -49,7 +49,20 @@ extern "C" void tcw_c(
     int xtbrn[NRNMAX][NSPMAX],
 
     // Fortran: arr(64, NSPMAX)
-    double arr[NSPMAX][64]
+    double arr[NSPMAX][64],
+
+    // The thermochemsitry read file    
+    string chmf, 
+    string rcnf,  
+    string mw_file, 
+    string cs_file,  
+    string mst_file,  
+    string diss_file,  
+    string ion_file,  
+    string apb_file,  
+    string thrf,  
+    string colpth 
+
 );
 
 extern "C" void src_c(
