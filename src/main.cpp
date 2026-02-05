@@ -65,13 +65,14 @@ for (int i = 0; i < m; i++){
 vector<float> A(m,1.0f);
 
 for (int i =0; i<m; i++){
-	A[i] = A[i] + 4.2*static_cast<float>(i)/m;
+	A[i] += 1*4.64*static_cast<float>(i)/m;
 }
 
 
 // e- N O N2 NO O2  
 vector<float> rho1(nsp,0e-3);
-rho1[11] = 0.0076;
+rho1[3] = 0.004425472;
+rho1[5] = 0.001434528;
 
 // the flow vector
 // q(N,M,T)
@@ -188,14 +189,14 @@ for (int k = 0; k<t-1; k++){
 	qp[U] = q(U,i,k);
 	qp[P] = q(P,i,k);
 	
-	src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
+	//src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
 
-	for (int o = 0; o < P+1; o++){q(o,i,k)= q(o,i,k)-f[o]*dt;}
+	//for (int o = 0; o < P+1; o++){q(o,i,k)= q(o,i,k)-f[o]*dt;}
 	}
 	// check if steady state has been reached, exit if so
 	// decide based on the exit Tv
-	if (k % 50 == 0 && k > 1600){
-		if (abs(q(V,m-1,k) - q(V,m-1,k-100)) < conv){	
+	if (k % 50 == 0 && k > 1600 && k < t-1){
+		if (abs(q(P,m-1,k) - q(P,m-1,k-100)) < conv){	
 			w = k;
 			goto post;} 
 	}
