@@ -15,10 +15,10 @@ double apb[NSPMAX][3];
 int    nrn[2];
 int    nsprn[NRNMAX][4];
 int    isprn[NRNMAX][NSPMAX];
-int    msprn[NRNMAX][NSPMAX];
+double msprn[NRNMAX][NSPMAX];
 int    ktbrn[NRNMAX];
-int    xtbrn[NRNMAX][NSPMAX];
-double arr[NSPMAX][64];
+double xtbrn[NRNMAX][NSPMAX];
+double arr[NRNMAX][64];
 
 // number of species
 int nsp;

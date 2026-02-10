@@ -1,0 +1,12 @@
+&chem
+  chmf     = '../../slime/in/thermo/park93/chemkin_o2_n2.dat',
+  rcnf     = '../../slime/in/thermo/park93/reactions_park93_o2_n2.dat',
+  mw_file  = '../../slime/in/thermo/park93/mw_millikan_o2_n2.dat',
+  cs_file  = '../../slime/in/thermo/park93/cs_o2_n2.dat',
+  mst_file = '../../slime/in/thermo/park93/tbr_park93_o2_n2.dat',
+  diss_file= '../../slime/in/thermo/park93/diss_o2_n2.dat',
+  ion_file = '../../slime/in/thermo/park93/ion_gnoffo89_o2_n2.dat',
+  apb_file = '../../slime/in/thermo/park93/e_neu_cs_o2_n2.dat'
+  thrf     = '../../slime/in/thermo/thermo.inp',
+  colpth   = '../../slime/in/thermo/bin/omg_beta/' 
+/

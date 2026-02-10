@@ -89,6 +89,7 @@ void write_cl(
     const std::string& filename
 ) {
     float tt;
+    float rho;
     std::ofstream file(filename);
 
     if (!file) {
@@ -114,7 +115,11 @@ void write_cl(
                 << q(nsp+2,i,t-1) << " "; // p
             tt = calt(q,i,t-1,nsp,wsp);
             file
-		<< tt << "\n";   // u
+		<< tt << " ";
+	    rho = 0.0;
+	    for (int o = 0; o <nsp; ++o){rho += q(o,i,t-1);}
+	    file
+		<< rho << "\n";
     }
 
     file.close();

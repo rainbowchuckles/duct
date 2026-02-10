@@ -224,7 +224,7 @@ c ... read reactions file(s)
       asp_c = asp  
       hfsp_c = hfsp  
       mw_c = mw  
-      cs_c = cs  
+      cs_c = cs
       diss_c = diss  
       inz_c = inz  
       apb_c = apb  
@@ -234,7 +234,7 @@ c ... read reactions file(s)
       msprn_c = msprn 
       ktbrn_c = ktbrn  
       xtbrn_c = xtbrn  
-      arr_c = arr  
+      arr_c = arr 
 
       return
 

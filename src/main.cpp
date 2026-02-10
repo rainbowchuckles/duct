@@ -64,15 +64,15 @@ for (int i = 0; i < m; i++){
 // the area function
 vector<float> A(m,1.0f);
 
-for (int i =0; i<m; i++){
-	A[i] += 1*4.64*static_cast<float>(i)/m;
-}
+//for (int i =0; i<m; i++){
+//	A[i] += 1*4.64*static_cast<float>(i)/m;
+//}
 
 
 // e- N O N2 NO O2  
 vector<float> rho1(nsp,0e-3);
-rho1[3] = 0.004425472;
-rho1[5] = 0.001434528;
+rho1[5] = 0.00687;
+rho1[7] = 0.002086;
 
 // the flow vector
 // q(N,M,T)
@@ -102,12 +102,14 @@ float dA;
 float du;
 float dp;
 float dTv;
+float ye;
 float rho = 0;
 vector<float> drho(nsp);
 int w;
+float scale;
 
 float pe = 0.0;  // the electron pressure
-float cvv = 200.0; // the vibrational specific heat at constant volume
+float cvv = 1.0; // the vibrational specific heat at constant volume
 
 cout << "t, #  " << " " << "dt, s " << endl;
 cout << endl;
@@ -119,7 +121,6 @@ for (int k = 0; k<t-1; k++){
 		cout << setw(6) << k << " " 
 		     << setw(6) << setprecision(3) << scientific << k*dt << endl;
 	}
-
 	// inlet condition
 	for (int j=0; j<nsp; j++){
 	q(j,0,k) = rho1[j];	
@@ -141,6 +142,15 @@ for (int k = 0; k<t-1; k++){
 	du   = q(U,i,k) - q(U,i-1,k);
 	dp   = q(P,i,k) - q(P,i-1,k);
 	
+	// get the non-equilibrium source terms
+	// only introduce them after the flow is steady
+	//if (k*dt > l/u1){
+	if (k > 1500){
+	for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
+	qp[V] = q(V,i,k);
+	qp[U] = q(U,i,k);
+	qp[P] = q(P,i,k);
+
 	// continuity update
 	for (int j=0; j<nsp; j++){
 	q(j,i,k+1)  = dA/dx;         
@@ -181,25 +191,25 @@ for (int k = 0; k<t-1; k++){
 	
 	q(P,i,k+1) = q(P,i,k) - q(P,i,k+1);              
 	
-	// get the non-equilibrium source terms
-	// only introduce them after the flow is steady
-	if (k > 1500){
-	for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
-	qp[V] = q(V,i,k);
-	qp[U] = q(U,i,k);
-	qp[P] = q(P,i,k);
+	src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
+	scale = static_cast<float>(k)/static_cast<float>(t);
+	scale = min(static_cast<float>(1.0),scale);
+	for (int o = 0; o < P+1; o++){q(o,i,k)= q(o,i,k)-f[o]*dt;}
+	for (int p = 0; p < nsp; p++){ye += f[p];}
 	
-	//src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
-
-	//for (int o = 0; o < P+1; o++){q(o,i,k)= q(o,i,k)-f[o]*dt;}
 	}
 	// check if steady state has been reached, exit if so
 	// decide based on the exit Tv
-	if (k % 50 == 0 && k > 1600 && k < t-1){
-		if (abs(q(P,m-1,k) - q(P,m-1,k-100)) < conv){	
-			w = k;
-			goto post;} 
+	//if (k % 250 == 0 && k*dt > 1.1*l/u1 && k < t-1){
+	if (k % 250 == 0 && k > 1600 && k < t-1){
+		w = k;
+		write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
+	//	if (abs(q(P,m-1,k) - q(P,m-1,k-100)) < conv){	
+	//		w = k;
+	//		goto post;} 
 	}
+
+	w = k;
 	}
 
 }

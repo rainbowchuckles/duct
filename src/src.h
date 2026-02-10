@@ -42,16 +42,16 @@ extern "C" void tcw_c(
     int isprn[NRNMAX][NSPMAX],
 
     // Fortran: msprn(NSPMAX, NRNMAX)
-    int msprn[NRNMAX][NSPMAX],
+    double msprn[NRNMAX][NSPMAX],
 
     // Fortran: ktbrn(NRNMAX)
     int ktbrn[NRNMAX],
 
     // Fortran: xtbrn(NSPMAX, NRNMAX)
-    int xtbrn[NRNMAX][NSPMAX],
+    double xtbrn[NRNMAX][NSPMAX],
 
     // Fortran: arr(64, NSPMAX)
-    double arr[NSPMAX][64]
+    double arr[NRNMAX][64]
 
 );
 
@@ -81,12 +81,12 @@ extern "C" void src_c(
     int nrn[2],
     int nsprn[NRNMAX][4],
     int isprn[NRNMAX][NSPMAX],
-    int msprn[NRNMAX][NSPMAX],
+    double msprn[NRNMAX][NSPMAX],
 
     int ktbrn[NRNMAX],
-    int xtbrn[NRNMAX][NSPMAX],
+    double xtbrn[NRNMAX][NSPMAX],
 
-    double arr[NSPMAX][64],
+    double arr[NRNMAX][64],
 
     double *q,
     double *f

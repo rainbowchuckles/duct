@@ -3,8 +3,8 @@ CXX := g++
 FXX := gfortran
 
 # Flags
-CXXFLAGS := -std=c++17 
-FXXFLAGS := -g -fcheck=all -fbacktrace -I ../inc
+CXXFLAGS := -O3 -std=c++17 
+FXXFLAGS := -O3 -fcheck=all -fbacktrace -I ../inc
 
 # Target
 TARGET := a.out
