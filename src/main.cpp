@@ -54,12 +54,11 @@ cout << endl;
 
 // x is the vector of physical grid locations
 vector<float> x(m);
+float dx0 = 0.001;
 
 // populate the grid vector
-for (int i = 0; i < m; i++){
-	x[i] = i/static_cast<float>(m);
-	x[i] = x[i]*l;
-}
+for (int i = 0; i < m; i++){x[i] = static_cast<float>(i)/static_cast<float>(m);}
+for (int i = 0; i < m; i++){x[i] *= l;}
 
 // the area function
 vector<float> A(m,1.0f);
@@ -91,7 +90,7 @@ for (int i =0; i<m; i++){
 		}
 		q(V,i,k) =  Tv1;
 		q(U,i,k) =   u1;
-		q(P,i,k) =   p1;
+		q(P,i,k) =  1.5* p1;
 	}
 }
 
@@ -109,7 +108,7 @@ int w;
 float scale;
 
 float pe = 0.0;  // the electron pressure
-float cvv = 1.0; // the vibrational specific heat at constant volume
+float cvv = 300.0; // the vibrational specific heat at constant volume
 
 cout << "t, #  " << " " << "dt, s " << endl;
 cout << endl;
@@ -142,10 +141,6 @@ for (int k = 0; k<t-1; k++){
 	du   = q(U,i,k) - q(U,i-1,k);
 	dp   = q(P,i,k) - q(P,i-1,k);
 	
-	// get the non-equilibrium source terms
-	// only introduce them after the flow is steady
-	//if (k*dt > l/u1){
-	if (k > 1500){
 	for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
 	qp[V] = q(V,i,k);
 	qp[U] = q(U,i,k);
@@ -160,7 +155,7 @@ for (int k = 0; k<t-1; k++){
 	q(j,i,k+1) += q(U,i,k)*drho[j]/dx; 
 	q(j,i,k+1) *= dt;
 
-	q(j,i,k+1) = q(j,i,k) - q(j,i,k+1);
+	q(j,i,k+1)  = q(j,i,k) - q(j,i,k+1);
 	}
 	
 	// vibrational energy update
@@ -180,23 +175,31 @@ for (int k = 0; k<t-1; k++){
 	q(U,i,k+1) *= dt;              
 	
 	q(U,i,k+1) = q(U,i,k) - q(U,i,k+1);              
-
+	
 	// energy update
 	q(P,i,k+1) = dA/dx;         
 	q(P,i,k+1) *= q(U,i,k)/A[i];
-	q(P,i,k+1) += du/dx;        
+	q(P,i,k+1) += du/dx; 
+	
+	// get gamma
+	gam_c(wsp,asp,hfsp,rsp,&nsp,qp,&a);
+	gam = a*a*rho/q(P,i,k);
+
 	q(P,i,k+1) *= gam*q(P,i,k);   
 	q(P,i,k+1) += q(U,i,k)*dp/dx;
 	q(P,i,k+1) *= dt;              
-	
+
 	q(P,i,k+1) = q(P,i,k) - q(P,i,k+1);              
 	
-	src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
-	scale = static_cast<float>(k)/static_cast<float>(t);
-	scale = min(static_cast<float>(1.0),scale);
-	for (int o = 0; o < P+1; o++){q(o,i,k)= q(o,i,k)-f[o]*dt;}
-	for (int p = 0; p < nsp; p++){ye += f[p];}
+	// get the non-equilibrium source terms
+	// only introduce them after the flow is steady
+	//if (k*dt > l/u1){
+
+	if (k > 1500){
 	
+	src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
+	for (int o = 0; o < P+1; o++){q(o,i,k+1)= q(o,i,k+1)-0.000005*f[o]; }
+
 	}
 	// check if steady state has been reached, exit if so
 	// decide based on the exit Tv
@@ -204,6 +207,7 @@ for (int k = 0; k<t-1; k++){
 	if (k % 250 == 0 && k > 1600 && k < t-1){
 		w = k;
 		write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
+		write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
 	//	if (abs(q(P,m-1,k) - q(P,m-1,k-100)) < conv){	
 	//		w = k;
 	//		goto post;} 
@@ -217,6 +221,7 @@ for (int k = 0; k<t-1; k++){
 // output the centerline profile to text
 post:
 write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
+write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
 cout << endl;
 cout << "Ran to completion. " << endl;
 

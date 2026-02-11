@@ -29,6 +29,7 @@ int nsp;
 // q(U)       = velocity in the lab frame, m/s
 // q(P)       = pressure, Pa
 double qp[NSPMAX];
+double q1[NSPMAX];
 
 // f is the vector of non-equilibrium source terms from OCEAN/LASTA
 // they are returned as /s so need to be multiplied by dt before 
@@ -72,3 +73,6 @@ string ion_file;
 string apb_file; 
 string thrf; 
 string colpth;
+
+double a = 0.0;
+double dc[NSPMAX];

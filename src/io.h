@@ -126,6 +126,56 @@ void write_cl(
 }
 
 
+void write_cl_mole(
+    const FlowField& q,
+    int m,
+    vector<float> x,
+    int t,
+    int nsp,
+    double wsp[NSPMAX],
+    const std::string& filename
+) {
+    float tt;
+    float rho;
+    float e = 0;
+    std::ofstream file(filename);
+
+    if (!file) {
+        std::cerr << "Error opening file: " << filename << '\n';
+        return;
+    }
+
+    // header (commented for plotting tools)
+    file << "# i  k  rho  u  p t\n";
+
+    file << std::scientific << std::setprecision(10);
+
+    for (int i = 0; i < m; ++i) {
+	    e = 0.0;
+	    for (int o = 0; o <nsp; ++o){e += q(o,i,t-1)/wsp[o];}
+            file
+                << x[i] << " "
+                << t-1 << " "; 
+		for (int j =0; j<nsp; j++){
+                file << q(j,i,t-1)/(wsp[j]*e) << " ";  // mole frac
+		}
+            file
+		<< q(nsp,i,t-1) << " "   // u
+		<< q(nsp+1,i,t-1) << " "   // u
+                << q(nsp+2,i,t-1) << " "; // p
+            tt = calt(q,i,t-1,nsp,wsp);
+            file
+		<< tt << " ";
+	    rho = 0.0;
+	    for (int o = 0; o <nsp; ++o){rho += q(o,i,t-1);}
+	    file
+		<< rho << "\n";
+    }
+
+    file.close();
+}
+
+
 #include <fstream>
 #include <string>
 #include <stdexcept>

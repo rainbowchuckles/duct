@@ -88,6 +88,16 @@ extern "C" void src_c(
 
     double arr[NRNMAX][64],
 
-    double *q,
-    double *f
+    double q[NSPMAX],
+    double f[NSPMAX]
+);
+
+extern "C" void gam_c(
+    double wsp[NSPMAX],
+    double asp[NSPMAX][NTRMAX][NACOEF],
+    double hfsp[NSPMAX],
+    double rsp[NSPMAX][4],
+    int *nsp,
+    double qp[NSPMAX],
+    double *c
 );

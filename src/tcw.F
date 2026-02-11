@@ -220,7 +220,7 @@ c ... read reactions file(s)
       ielsp_c = ielsp
       melsp_c = melsp
       wsp_c = wsp  
-      rsp_c = rsp  
+      rsp_c = rsp 
       asp_c = asp  
       hfsp_c = hfsp  
       mw_c = mw  
