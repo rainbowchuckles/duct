@@ -29,6 +29,8 @@ c ... local symbols
       integer           i,k,flg
 
       real*8            dt,t_eq,rd
+
+      real*8            ht
          
       real*8            tau
       dimension         tau(NSPMAX,NSPMAX)
@@ -60,6 +62,7 @@ c ... executable statements
      1          arr_c,t_eq,qp_c,qp_c,rd,f_c,df0,df1,g0,dg0,
      1          dg1,dr,i,k,
      1          dt,qp_c,flg, .true., 0.35d0,frlx,tau)
+
       return 
 
       end

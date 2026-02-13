@@ -70,8 +70,8 @@ vector<float> A(m,1.0f);
 
 // e- N O N2 NO O2  
 vector<float> rho1(nsp,0e-3);
-rho1[5] = 0.00687;
-rho1[7] = 0.002086;
+rho1[3] = 0.00687;
+rho1[5] = 0.002086;
 
 // the flow vector
 // q(N,M,T)
@@ -80,7 +80,7 @@ rho1[7] = 0.002086;
 // T: the time steps
 // this guy is defined in class.h
 
-FlowField q(nv,m,t);
+FlowField q(nv+1,m,t);
 
 // initialise the flow field
 for (int i =0; i<m; i++){
@@ -90,7 +90,7 @@ for (int i =0; i<m; i++){
 		}
 		q(V,i,k) =  Tv1;
 		q(U,i,k) =   u1;
-		q(P,i,k) =  1.5* p1;
+		q(P,i,k) =   p1;
 	}
 }
 
@@ -190,16 +190,23 @@ for (int k = 0; k<t-1; k++){
 	q(P,i,k+1) *= dt;              
 
 	q(P,i,k+1) = q(P,i,k) - q(P,i,k+1);              
-	
+
 	// get the non-equilibrium source terms
 	// only introduce them after the flow is steady
 	//if (k*dt > l/u1){
 
 	if (k > 1500){
-	
+	// chemistry sub-cycle
+	for (int g = 0; g < 100; g++){
+	for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k+1);}
+	qp[V] = q(V,i,k+1);
+	qp[U] = q(U,i,k+1);
+	qp[P] = q(P,i,k+1);
 	src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
-	for (int o = 0; o < P+1; o++){q(o,i,k+1)= q(o,i,k+1)-0.000005*f[o]; }
-
+	// storing totalh
+	q(P+1,i,k) = -f[P+1];
+	for (int o = 0; o < P+1; o++){q(o,i,k+1) += -dt*f[o]/100.0; }
+	}
 	}
 	// check if steady state has been reached, exit if so
 	// decide based on the exit Tv
@@ -212,7 +219,6 @@ for (int k = 0; k<t-1; k++){
 	//		w = k;
 	//		goto post;} 
 	}
-
 	w = k;
 	}
 

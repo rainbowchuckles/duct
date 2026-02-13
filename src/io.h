@@ -119,7 +119,7 @@ void write_cl(
 	    rho = 0.0;
 	    for (int o = 0; o <nsp; ++o){rho += q(o,i,t-1);}
 	    file
-		<< rho << "\n";
+		<< q(nsp+3,i,t-1) << "\n";
     }
 
     file.close();
@@ -137,6 +137,8 @@ void write_cl_mole(
 ) {
     float tt;
     float rho;
+    float r_mix;
+    float peos;
     float e = 0;
     std::ofstream file(filename);
 
@@ -169,7 +171,7 @@ void write_cl_mole(
 	    rho = 0.0;
 	    for (int o = 0; o <nsp; ++o){rho += q(o,i,t-1);}
 	    file
-		<< rho << "\n";
+		<< rho*q(nsp+1,i,t-1) << "\n";
     }
 
     file.close();
