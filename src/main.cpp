@@ -197,15 +197,16 @@ for (int k = 0; k<t-1; k++){
 
 	if (k > 1500){
 	// chemistry sub-cycle
-	for (int g = 0; g < 100; g++){
-	for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k+1);}
-	qp[V] = q(V,i,k+1);
-	qp[U] = q(U,i,k+1);
-	qp[P] = q(P,i,k+1);
+	for (int g = 0; g < 1; g++){
+	for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
+	qp[V] = q(V,i,k);
+	qp[U] = q(U,i,k);
+	qp[P] = q(P,i,k);
 	src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
 	// storing totalh
 	q(P+1,i,k) = -f[P+1];
-	for (int o = 0; o < P+1; o++){q(o,i,k+1) += -dt*f[o]/100.0; }
+
+	for (int o = 0; o < P+1; o++){q(o,i,k+1) += -dt*f[o]/1.0; }
 	}
 	}
 	// check if steady state has been reached, exit if so
@@ -215,9 +216,9 @@ for (int k = 0; k<t-1; k++){
 		w = k;
 		write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
 		write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
-	//	if (abs(q(P,m-1,k) - q(P,m-1,k-100)) < conv){	
-	//		w = k;
-	//		goto post;} 
+		if (abs(q(P,m-1,k) - q(P,m-1,k-100)) < conv){	
+			w = k;
+			goto post;} 
 	}
 	w = k;
 	}
