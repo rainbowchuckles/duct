@@ -58,7 +58,7 @@ c ... executable statements
       call src( nsp_c,nelsp_c,ielsp_c,melsp_c,wsp_c,rsp_c,
      1          asp_c,hfsp_c,mw_c,cs_c,diss_c,inz_c,apb_c,
      1          nrn_c,nsprn_c,isprn_c,msprn_c,ktbrn_c,xtbrn_c, 
-     1          arr_c,t_eq,qp_c,qp_c,rd,f_c,df0,df1,g0,dg0,
+     1          arr_c,t_eq,qp_c,qp_c,rd,g0,df0,df1,f_c,dg0,
      1          dg1,dr,i,k,
      1          dt,qp_c,flg, .true., 0.35d0,frlx,tau)
 

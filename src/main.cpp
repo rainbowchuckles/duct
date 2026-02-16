@@ -38,7 +38,11 @@ tcw_c(inp,&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,i
 int nv  = nsp + 3;
 int V   = nsp;
 int T   = nsp+1;
-int Us  = nsp+2;
+int UU  = nsp+2;
+
+int Vs  = nsp;
+int Us  = nsp+1;
+int Ps  = nsp+2;
 
 int I = nsp;
 int E = nsp+1;
@@ -84,7 +88,7 @@ for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
 	for (int j=0; j<nsp; j++){qp[j] = rho1[j];}
 	qp[V]  = Tv1; 
-	qp[Us] = u1; 
+	qp[UU] = u1; 
 	qp[T]  = T1;
 }}
 
@@ -96,12 +100,19 @@ double S[t+1][m+1][nv] = {0.0};
 double U[t+1][m+1][nv] = {0.0};
 
 // the flux vectors
-double F[nv]  = {0.0};
+double F[m+1][nv]  = {0.0};
+
+// source vectors
+double G[nv]  = {0.0};
+double Q[nv]  = {0.0};
 
 // initialise the solver
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
-for (int j=0; j<X+1; j++){S[k][i][j] = qp[j];}
+for (int j=0; j<nsp; j++){S[k][i][j] = qp[j];}
+S[k][i][V]  = qp[V];
+S[k][i][UU] = qp[UU];
+S[k][i][T]  = qp[T];
 }}
 
 // the main loop
@@ -115,27 +126,39 @@ p = calp(S[k][i], nsp, wsp);
 
 // 1. Evaluate U(S) = [rhoi, ..., rhos, rhoev,rhoE,rhou] -> vector of conserved variables
 
-o2c_c(S[k][i], U[k][i], Aus, &nsp, wsp, asp, hfsp, rsp);
+for (int n = 0; n < nsp; n++){qp[n] = S[k][i][n];}
+qp[Vs] = S[k][i][V];
+qp[Us] = S[k][i][UU];
+qp[Ps] = p;
 
-for (int j=0; j<X+1; j++){cout << U[k][i][j] << endl;}
-exit(0);
+o2c_c(qp, U[k][i], Aus, &nsp, wsp, asp, hfsp, rsp);
+
 
 // 2. Evaluate F(S) = [rhoiu, ..., rhosu, rhoevu,rhoHu,rhou^2 + p] -> flux of conserved variables
 
-F[k][i][E] = U[k][i][E] + p;
+F[i][E] = U[k][i][E] + p;
 
-for (int j=0; j<X+1; j++){F[k][i][E] = U[k][i][E]*S[k][i][Us];}
+for (int j=0; j<X+1; j++){F[i][E] = U[k][i][E]*S[k][i][Us];}
 
-F[k][i][X] += p;
+F[i][X] += p;
 
-//// 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
-//
+// 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
+
 //G[X] = p*dA/dx;
-//
-//// 4. Evaluate Q - > vector of thermochemical source terms
+
+// 4. Evaluate Q - > vector of thermochemical source terms
+
+for (int n = 0; n < nsp; n++){qp[n] = S[k][i][n];}
+qp[Vs] = S[k][i][V];
+qp[Us] = S[k][i][UU];
+qp[Ps] = p;
+
+src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,Q);
+
+for (int j=0; j<X+1; j++){cout << Q[j] << endl;}
+exit(0);
 //// 5. Aus = dU/dS, Afs = dF/dS - > Jacobians
 //
-//src_c(Q);
 //
 //// 6. For each streamwise cell i evaluate the numerical fluxes:
 //// F_{i+1/2} = 0.5 * ( F(S_L) + F(S_R) )
