@@ -12,7 +12,7 @@
 #include "class.h"
 #include "gas.h"
 #include "io.h"
-#include "src.h"
+#include "func.h"
 
 using namespace std;
 
@@ -35,10 +35,14 @@ tcw_c(inp,&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,i
 
 // nv is the number of variables
 // nsp species + Tv + u + p 
-int nv  = nsp + 3;
+int nv  = nsp + 4;
 int V   = nsp;
 int U   = nsp+1;
 int P   = nsp+2;
+
+int I   = nsp;
+int E   = nsp+1;
+int X   = nsp+3;
 
 // read the user input file
 read_input_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1, conv);
@@ -54,7 +58,6 @@ cout << endl;
 
 // x is the vector of physical grid locations
 vector<float> x(m);
-float dx0 = 0.001;
 
 // populate the grid vector
 for (int i = 0; i < m; i++){x[i] = static_cast<float>(i)/static_cast<float>(m);}
@@ -68,169 +71,83 @@ vector<float> A(m,1.0f);
 //}
 
 
-// e- N O N2 NO O2  
+// e- N O N2 NO O2 
+double rho = 0.0; 
+double p   = 0.0; 
 vector<float> rho1(nsp,0e-3);
 rho1[3] = 0.00687;
 rho1[5] = 0.002086;
 
+
+// assemble the initial vector of primitive variables
+
+for (int k=0; k<t+1; k++){
+for (int i=0; i<m+1; i++){
+	for (int j=0; j<nsp; j++){qp[j] = rho1[j];}
+	qp[V] = Tv1; 
+	qp[U] = u1; 
+	qp[P] = p1; 
+
+}}
+
+// assemble the initial vector of conserved variables
+s2c_c(qp,qc,&nsp,wsp,asp,hfsp,rsp);
+
 // the flow vector
-// q(N,M,T)
-// N: the primitive variables (rho, u, p)
+// Q: N x M x T
+// N: the primitive variables (rho_s,rhoev,rhou,rhoE)
 // M: the streamwise points 
 // T: the time steps
-// this guy is defined in class.h
 
-FlowField q(nv+1,m,t);
+double Q[t][m][NSPMAX] = {0.0};
 
-// initialise the flow field
-for (int i =0; i<m; i++){
-	for (int k= 0; k<t; k++){
-		for (int j=0; j<nsp; j++){
-		q(j,i,k) = rho1[j];
-		}
-		q(V,i,k) =  Tv1;
-		q(U,i,k) =   u1;
-		q(P,i,k) =   p1;
-	}
-}
+// the left and right flux vectors
+
+double Fl[NSPMAX] = {0.0};
+double Fr[NSPMAX] = {0.0};
 
 
-// Euler updates
-float dx;
-float dA;
-float du;
-float dp;
-float dTv;
-float ye;
-float rho = 0;
-vector<float> drho(nsp);
-int w;
-float scale;
+// initialise the solver
+for (int k=0; k<t+1; k++){
+for (int i=0; i<m+1; i++){
+for (int j=0; j<X+1; j++){Q[k][i][j] = qc[j]*A[i];}
+}}
 
-float pe = 0.0;  // the electron pressure
-float cvv = 300.0; // the vibrational specific heat at constant volume
 
-cout << "t, #  " << " " << "dt, s " << endl;
-cout << endl;
-
-// loop through time
-for (int k = 0; k<t-1; k++){
-	// print some indication of progress to the terminal
-	if (k % 50 == 0 || k == 0 ){
-		cout << setw(6) << k << " " 
-		     << setw(6) << setprecision(3) << scientific << k*dt << endl;
-	}
-	// inlet condition
-	for (int j=0; j<nsp; j++){
-	q(j,0,k) = rho1[j];	
-	}
-	q(V,0,k) =   Tv1;	
-	q(U,0,k) =   u1;	
-	q(P,0,k) =   p1;                             
-       	
- 	// loop through space
-	for (int i = 1; i<m; i++){
-	dx   = x[i] - x[i-1];
-	dA   = A[i] - A[i-1];
+// the main loop
+for (int k=0; k<t+1; k++){
+for (int i=0; i<m+1; i++){
+	// convert to primitive for flux calculation	
+	// densities
 	rho = 0.0;
 	for (int j=0; j<nsp; j++){
-	 drho[j] = q(j,i,k) - q(j,i-1,k);
-	 rho += q(j,i,k);
-	}
-	dTv  = q(V,i,k) - q(V,i-1,k);
-	du   = q(U,i,k) - q(U,i-1,k);
-	dp   = q(P,i,k) - q(P,i-1,k);
+		qp[j] = Q[k][i][j]/A[i]; 
+		rho += qp[j];}
+	// vibrational energy
+	qp[V] = Q[k][i][E]/rho;
+	// velocity
+	qp[U] = Q[k][i][X]/rho;
+        // total enthalpy (H) from internal energy (E)
+	qp[I] = Q[k][i][I]/rho;
+	cout << qp[I] << endl;
+	p = 0.4*rho*(qp[I] - 0.5*qp[U]*qp[U]);
+	qp[I] += p/rho;
+	cout << p   << endl;
+	cout << qp[I] << endl;
+	exit(0);
+	// form the left flux vector F_L
 	
-	for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
-	qp[V] = q(V,i,k);
-	qp[U] = q(U,i,k);
-	qp[P] = q(P,i,k);
+}}
 
-	// continuity update
-	for (int j=0; j<nsp; j++){
-	q(j,i,k+1)  = dA/dx;         
-	q(j,i,k+1) *= q(U,i,k)/A[i];
-	q(j,i,k+1) += du/dx;        
-	q(j,i,k+1) *= q(j,i,k);
-	q(j,i,k+1) += q(U,i,k)*drho[j]/dx; 
-	q(j,i,k+1) *= dt;
 
-	q(j,i,k+1)  = q(j,i,k) - q(j,i,k+1);
-	}
-	
-	// vibrational energy update
-	q(V,i,k+1)  = du/dx;
-	q(V,i,k+1) += (q(U,i,k)/A[i])*(dA/dx);
-	q(V,i,k+1) *= -pe;
-	q(V,i,k+1) /= rho*cvv;
-	q(V,i,k+1) += q(U,i,k)*dTv/dx;
-	q(V,i,k+1) *= dt;
 
-	q(V,i,k+1) = q(V,i,k) - q(V,i,k+1);
-
-	// momentum update
-	q(U,i,k+1)  = dp/dx;
-	q(U,i,k+1) /= rho;      
-	q(U,i,k+1) += q(U,i,k)*du/dx;
-	q(U,i,k+1) *= dt;              
-	
-	q(U,i,k+1) = q(U,i,k) - q(U,i,k+1);              
-	
-	// energy update
-	q(P,i,k+1) = dA/dx;         
-	q(P,i,k+1) *= q(U,i,k)/A[i];
-	q(P,i,k+1) += du/dx; 
-	
-	// get gamma
-	gam_c(wsp,asp,hfsp,rsp,&nsp,qp,&a);
-	gam = a*a*rho/q(P,i,k);
-
-	q(P,i,k+1) *= gam*q(P,i,k);   
-	q(P,i,k+1) += q(U,i,k)*dp/dx;
-	q(P,i,k+1) *= dt;              
-
-	q(P,i,k+1) = q(P,i,k) - q(P,i,k+1);              
-
-	// get the non-equilibrium source terms
-	// only introduce them after the flow is steady
-	//if (k*dt > l/u1){
-
-	if (k > 1500){
-	// chemistry sub-cycle
-	for (int g = 0; g < 1; g++){
-	for (int o = 0; o < nsp; o++){qp[o]=q(o,i,k);}
-	qp[V] = q(V,i,k);
-	qp[U] = q(U,i,k);
-	qp[P] = q(P,i,k);
-	src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,f);
-	// storing totalh
-	q(P+1,i,k) = -f[P+1];
-
-	for (int o = 0; o < P+1; o++){q(o,i,k+1) += -dt*f[o]/1.0; }
-	}
-	}
-	// check if steady state has been reached, exit if so
-	// decide based on the exit Tv
-	//if (k % 250 == 0 && k*dt > 1.1*l/u1 && k < t-1){
-	if (k % 250 == 0 && k > 1600 && k < t-1){
-		w = k;
-		write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
-		write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
-		if (abs(q(P,m-1,k) - q(P,m-1,k-100)) < conv){	
-			w = k;
-			goto post;} 
-	}
-	w = k;
-	}
-
-}
 
 // output the centerline profile to text
-post:
-write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
-write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
-cout << endl;
-cout << "Ran to completion. " << endl;
+//post:
+//write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
+//write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
+//cout << endl;
+//cout << "Ran to completion. " << endl;
 
 
 return 0;

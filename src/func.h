@@ -92,12 +92,12 @@ extern "C" void src_c(
     double f[NSPMAX]
 );
 
-extern "C" void gam_c(
+extern "C" void s2c_c(
+    double qp[NSPMAX],
+    double qc[NSPMAX],
+    int *nsp,
     double wsp[NSPMAX],
     double asp[NSPMAX][NTRMAX][NACOEF],
     double hfsp[NSPMAX],
-    double rsp[NSPMAX][4],
-    int *nsp,
-    double qp[NSPMAX],
-    double *c
+    double rsp[NSPMAX][4]
 );
