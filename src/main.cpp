@@ -35,7 +35,7 @@ tcw_c(inp,&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,i
 
 // nv is the number of variables
 // nsp species + Tv + u + p 
-int nv  = nsp + 4;
+int nv  = nsp + 3;
 int V   = nsp;
 int U   = nsp+1;
 int P   = nsp+2;
@@ -73,7 +73,11 @@ vector<float> A(m,1.0f);
 
 // e- N O N2 NO O2 
 double rho = 0.0; 
+double rhol = 0.0; 
+double rhor = 0.0; 
 double p   = 0.0; 
+double pl   = 0.0; 
+double pr   = 0.0; 
 vector<float> rho1(nsp,0e-3);
 rho1[3] = 0.00687;
 rho1[5] = 0.002086;
@@ -86,8 +90,7 @@ for (int i=0; i<m+1; i++){
 	for (int j=0; j<nsp; j++){qp[j] = rho1[j];}
 	qp[V] = Tv1; 
 	qp[U] = u1; 
-	qp[P] = p1; 
-
+	qp[P] = p1;
 }}
 
 // assemble the initial vector of conserved variables
@@ -99,13 +102,15 @@ s2c_c(qp,qc,&nsp,wsp,asp,hfsp,rsp);
 // M: the streamwise points 
 // T: the time steps
 
-double Q[t][m][NSPMAX] = {0.0};
+double Q[t+1][m+1][nv] = {0.0};
 
-// the left and right flux vectors
+// the flux vectors
 
-double Fl[NSPMAX] = {0.0};
-double Fr[NSPMAX] = {0.0};
+double F[nv]  = {0.0};
+double Fl[nv] = {0.0};
+double Fr[nv] = {0.0};
 
+double S[nv] = {0.0};
 
 // initialise the solver
 for (int k=0; k<t+1; k++){
@@ -113,29 +118,52 @@ for (int i=0; i<m+1; i++){
 for (int j=0; j<X+1; j++){Q[k][i][j] = qc[j]*A[i];}
 }}
 
-
 // the main loop
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
 	// convert to primitive for flux calculation	
 	// densities
-	rho = 0.0;
+	rhol = 0.0;
 	for (int j=0; j<nsp; j++){
-		qp[j] = Q[k][i][j]/A[i]; 
-		rho += qp[j];}
+		qpl[j] = Q[k][i][j]/A[i]; 
+		rhol += qpl[j];}
+	for (i+1nt j=0; j<nsp; j++){
+		qpl[j] = Q[k][i+1][j]/A[i+1]; 
+		rhor += qpl[j];}
 	// vibrational energy
-	qp[V] = Q[k][i][E]/rho;
+	qpl[V] = Q[k][i][E]/rhol;
+	qpr[V] = Q[k][i+1][E]/rhor;
 	// velocity
-	qp[U] = Q[k][i][X]/rho;
+	qpl[U] = Q[k][i][X]/rhol;
+	qpr[U] = Q[k][i+1][X]/rhor;
         // total enthalpy (H) from internal energy (E)
-	qp[I] = Q[k][i][I]/rho;
-	cout << qp[I] << endl;
-	p = 0.4*rho*(qp[I] - 0.5*qp[U]*qp[U]);
-	qp[I] += p/rho;
-	cout << p   << endl;
-	cout << qp[I] << endl;
-	exit(0);
-	// form the left flux vector F_L
+	qpl[I] = Q[k][i][I]/rhol;
+	pl = 0.4*rhol*(qpl[I] - 0.5*qpl[U]*qpl[U]);
+	qpl[I] += pl/rhol;
+	qpr[I] = Q[k][i+1][I]/rhor;
+	pr = 0.4*rhor*(qpr[I] - 0.5*qpr[U]*qpr[U]);
+	qpr[I] += pr/rhor;
+
+	// form the left and right flux vectors
+	// continuity	
+	for (int j=0; j<nsp; j++){Fl[j] = qpl[j]*qpl[U]*(A[i+1]+A[i])/2.0:}
+	for (int j=0; j<nsp; j++){Fr[j] = qpr[j]*qpr[U]*(A[i+1]+A[i])/2.0:}
+	// vibrational energy
+	Fl[E] = rhol*qpl[U]*qpl[V]*(A[i+1]+A[i])/2.0;
+	Fr[E] = rhor*qpr[U]*qpr[V]*(A[i+1]+A[i])/2.0;
+	// momentum
+	Fl[X] = (rhol*qpl[U]*qpl[U] + pl)*(A[i+1]+A[i])/2.0;
+	Fr[X] = (rhor*qpr[U]*qpr[U] + pr)*(A[i+1]+A[i])/2.0;
+	// total energy
+	Fl[I] = rhol*qpl[U]*qpl[I]*(A[i+1]+A[i])/2.0;
+	Fr[I] = rhor*qpr[U]*qpr[I]*(A[i+1]+A[i])/2.0;
+
+	// area variation source term
+        S[X]  = (A[i+1]+A[i])/2.0; 
+        S[X] -= (A[i]+A[i-1])/2.0; 
+	S[X] *= pl;
+
+	// discrete update
 	
 }}
 

@@ -29,6 +29,8 @@ int nsp;
 // q(U)       = velocity in the lab frame, m/s
 // q(P)       = pressure, Pa
 double qp[NSPMAX];
+double qpl[NSPMAX];
+double qpr[NSPMAX];
 double qc[NSPMAX];
 double q1[NSPMAX];
 
