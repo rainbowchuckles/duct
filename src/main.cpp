@@ -38,7 +38,11 @@ tcw_c(inp,&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,i
 int nv  = nsp + 3;
 int V   = nsp;
 int T   = nsp+1;
-int U   = nsp+2;
+int Us  = nsp+2;
+
+int I = nsp;
+int E = nsp+1;
+int X = nsp+3;
 
 // read the user input file
 read_input_file(argv + 1, gam, t, dt, m, l, u1, T1, Tv1, conv);
@@ -79,30 +83,25 @@ rho1[5] = 0.002086;
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
 	for (int j=0; j<nsp; j++){qp[j] = rho1[j];}
-	qp[V] = Tv1; 
-	qp[U] = u1; 
-	qp[T] = T1;
+	qp[V]  = Tv1; 
+	qp[Us] = u1; 
+	qp[T]  = T1;
 }}
 
 // assemble the initial vector of conserved variables
 //s2c_c(qp,qc,&nsp,wsp,asp,hfsp,rsp);
 
 // the flow vector
-// Q: N x M x T
-// N: the primitive variables (rho_s,rhoev,rhou,rhoE)
-// M: the streamwise points 
-// T: the time steps
-
-double Q[t+1][m+1][nv] = {0.0};
+double S[t+1][m+1][nv] = {0.0};
+double U[t+1][m+1][nv] = {0.0};
 
 // the flux vectors
-
 double F[nv]  = {0.0};
 
 // initialise the solver
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
-for (int j=0; j<X+1; j++){Q[k][i][j] = qp[j]*A[i];}
+for (int j=0; j<X+1; j++){S[k][i][j] = qp[j];}
 }}
 
 // the main loop
@@ -112,52 +111,59 @@ for (int i=0; i<m+1; i++){
 // Given knowledge of the state vector S = [rhoi, ..., rhos, Tve, Ttr, u]
 // 0. Calculate the static pressure from Boyle's law
 
-boyle(p, S, &nsp, wsp, asp, hfsp, rsp);
+p = calp(S[k][i], nsp, wsp);
 
 // 1. Evaluate U(S) = [rhoi, ..., rhos, rhoev,rhoE,rhou] -> vector of conserved variables
 
-s2u_c(S, U, Aus, &nsp, wsp, asp, hfsp, rsp);
+o2c_c(S[k][i], U[k][i], Aus, &nsp, wsp, asp, hfsp, rsp);
+
+for (int j=0; j<X+1; j++){cout << U[k][i][j] << endl;}
+exit(0);
 
 // 2. Evaluate F(S) = [rhoiu, ..., rhosu, rhoevu,rhoHu,rhou^2 + p] -> flux of conserved variables
 
-s2f_c(S, F, Afs, &nsp, wsp, asp, hfsp, rsp);
+F[k][i][E] = U[k][i][E] + p;
 
-// 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
+for (int j=0; j<X+1; j++){F[k][i][E] = U[k][i][E]*S[k][i][Us];}
 
-G[X] = p*dA/dx;
+F[k][i][X] += p;
 
-// 4. Evaluate Q - > vector of thermochemical source terms
-// 5. Aus = dU/dS, Afs = dF/dS - > Jacobians
-
-src_c(Q);
-
-// 6. For each streamwise cell i evaluate the numerical fluxes:
-// F_{i+1/2} = 0.5 * ( F(S_L) + F(S_R) )
-//             - 0.5 * alpha_{i+1/2} * ( U(S_R) - U(S_L) )
+//// 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
 //
-// where:
-//   S_L  = state to the left of the interface
-//   S_R  = state to the right of the interface
-//   F(.) = physical flux function
-//   U(.) = conserved variable vector
-//   alpha_{i+1/2} = max wave speed at the interface
-
-flux(F1, F2);
-
-// 7. Form the residual in conserved variables
-// R_{i,k} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
-
-for (int n = 0; n < X+1; n++){
-	R[n] = F2[n] - F1[n];
-	R[n] /= -dx;
-	R[n] += Q[n];
-}
-
-// 8. Solve the linear system for dS/dt
-// dS/dt = A^-1 .R
-
-// 9. Explicitly advance the state vector
-// S_{i,k+1} = S_{i,k} + dt*dS/dt 
+//G[X] = p*dA/dx;
+//
+//// 4. Evaluate Q - > vector of thermochemical source terms
+//// 5. Aus = dU/dS, Afs = dF/dS - > Jacobians
+//
+//src_c(Q);
+//
+//// 6. For each streamwise cell i evaluate the numerical fluxes:
+//// F_{i+1/2} = 0.5 * ( F(S_L) + F(S_R) )
+////             - 0.5 * alpha_{i+1/2} * ( U(S_R) - U(S_L) )
+////
+//// where:
+////   S_L  = state to the left of the interface
+////   S_R  = state to the right of the interface
+////   F(.) = physical flux function
+////   U(.) = conserved variable vector
+////   alpha_{i+1/2} = max wave speed at the interface
+//
+//flux(F1, F2);
+//
+//// 7. Form the residual in conserved variables
+//// R_{i,k} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
+//
+//for (int n = 0; n < X+1; n++){
+//	R[n] = F2[n] - F1[n];
+//	R[n] /= -dx;
+//	R[n] += Q[n];
+//}
+//
+//// 8. Solve the linear system for dS/dt
+//// dS/dt = A^-1 .R
+//
+//// 9. Explicitly advance the state vector
+//// S_{i,k+1} = S_{i,k} + dt*dS/dt 
 }}
 
 

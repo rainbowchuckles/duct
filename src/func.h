@@ -101,3 +101,14 @@ extern "C" void s2c_c(
     double hfsp[NSPMAX],
     double rsp[NSPMAX][4]
 );
+
+extern "C" void o2c_c(
+    double qp[NSPMAX],
+    double qc[NSPMAX],
+    double j[NSPMAX][NSPMAX],
+    int *nsp,
+    double wsp[NSPMAX],
+    double asp[NSPMAX][NTRMAX][NACOEF],
+    double hfsp[NSPMAX],
+    double rsp[NSPMAX][4]
+);

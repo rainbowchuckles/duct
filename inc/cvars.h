@@ -20,6 +20,8 @@
  	real(c_double)                :: xtbrn_c(NSPMAX,NRNMAX)
  	real(c_double)                :: arr_c(64,NRNMAX)
  	real(c_double)                :: qp_c(NSPMAX)
+ 	real(c_double)                :: qc_c(NSPMAX)
+ 	real(c_double)                :: qw_c(NSPMAX)
  	real(c_double)                :: q_c(NSPMAX)
  	real(c_double)                :: f_c(NSPMAX)
  	real(c_double)                :: c_c
