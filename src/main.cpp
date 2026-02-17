@@ -33,27 +33,14 @@ int length = strlen(inp);
 
 tcw_c(inp,&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr);
 
-// nv is the number of variables
-// nsp species + Tv + u + p 
-int nv  = nsp + 3;
-int V   = nsp;
-int T   = nsp+1;
-int UU  = nsp+2;
-
-int Vs  = nsp;
-int Us  = nsp+1;
-int Ps  = nsp+2;
-
-int I = nsp;
-int E = nsp+1;
-int X = nsp+3;
+#include "macro.h"
 
 // read the user input file
-read_input_file(argv + 1, gam, t, dt, m, l, u1, T1, Tv1, conv);
+read_input_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1, conv);
 
 cout << "Inlet conditions: " << endl;
 cout << endl;
-cout << "T: " << " " << T1 << endl;
+cout << "p: " << " " << p1 << endl;
 cout << "u: " << " " << u1 << endl;
 cout << "Tv:" << " " << Tv1 << endl;
 cout << endl;
@@ -87,106 +74,94 @@ rho1[5] = 0.002086;
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
 	for (int j=0; j<nsp; j++){qp[j] = rho1[j];}
-	qp[V]  = Tv1; 
-	qp[UU] = u1; 
-	qp[T]  = T1;
+	qp[Vs] = Tv1; 
+	qp[Us] = u1; 
+	qp[Ps] = p1;
 }}
 
-// assemble the initial vector of conserved variables
-//s2c_c(qp,qc,&nsp,wsp,asp,hfsp,rsp);
+// double
+double dx;
 
 // the flow vector
 double S[t+1][m+1][nv] = {0.0};
 double U[t+1][m+1][nv] = {0.0};
 
 // the flux vectors
-double F[m+1][nv]  = {0.0};
+double F1[nv]  = {0.0};
+double F2[nv] = {0.0};
 
 // source vectors
 double G[nv]  = {0.0};
 double Q[nv]  = {0.0};
 
+// residual vector
+double R[nv]  = {0.0};
+double C[nv]  = {0.0};
+
 // initialise the solver
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
 for (int j=0; j<nsp; j++){S[k][i][j] = qp[j];}
-S[k][i][V]  = qp[V];
-S[k][i][UU] = qp[UU];
-S[k][i][T]  = qp[T];
+S[k][i][Vs] = qp[Vs];
+S[k][i][Us] = qp[Us];
+S[k][i][Ps] = qp[Ps];
 }}
 
 // the main loop
 for (int k=0; k<t+1; k++){
-for (int i=0; i<m+1; i++){
-// Recipe
-// Given knowledge of the state vector S = [rhoi, ..., rhos, Tve, Ttr, u]
-// 0. Calculate the static pressure from Boyle's law
-
-p = calp(S[k][i], nsp, wsp);
-
-// 1. Evaluate U(S) = [rhoi, ..., rhos, rhoev,rhoE,rhou] -> vector of conserved variables
-
-for (int n = 0; n < nsp; n++){qp[n] = S[k][i][n];}
-qp[Vs] = S[k][i][V];
-qp[Us] = S[k][i][UU];
-qp[Ps] = p;
-
-o2c_c(qp, U[k][i], Aus, &nsp, wsp, asp, hfsp, rsp);
-
-
-// 2. Evaluate F(S) = [rhoiu, ..., rhosu, rhoevu,rhoHu,rhou^2 + p] -> flux of conserved variables
-
-F[i][E] = U[k][i][E] + p;
-
-for (int j=0; j<X+1; j++){F[i][E] = U[k][i][E]*S[k][i][Us];}
-
-F[i][X] += p;
+for (int i=1; i<m+1; i++){
 
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
 
 //G[X] = p*dA/dx;
 
 // 4. Evaluate Q - > vector of thermochemical source terms
+for (int j=0; j<Ps+1; j++){qp[j] = S[k][i][j];}
 
-for (int n = 0; n < nsp; n++){qp[n] = S[k][i][n];}
-qp[Vs] = S[k][i][V];
-qp[Us] = S[k][i][UU];
-qp[Ps] = p;
+src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,Q,J);
 
-src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,Q);
+// 6. For each streamwise cell i evaluate the numerical fluxes:
+// F_{i+1/2} = 0.5 * ( F(S_L) + F(S_R) )
+//             - 0.5 * alpha_{i+1/2} * ( U(S_R) - U(S_L) )
+//
+// where:
+//   S_L  = state to the left of the interface
+//   S_R  = state to the right of the interface
+//   F(.) = physical flux function
+//   U(.) = conserved variable vector
+//   alpha_{i+1/2} = max wave speed at the interface
 
-for (int j=0; j<X+1; j++){cout << Q[j] << endl;}
-exit(0);
-//// 5. Aus = dU/dS, Afs = dF/dS - > Jacobians
-//
-//
-//// 6. For each streamwise cell i evaluate the numerical fluxes:
-//// F_{i+1/2} = 0.5 * ( F(S_L) + F(S_R) )
-////             - 0.5 * alpha_{i+1/2} * ( U(S_R) - U(S_L) )
-////
-//// where:
-////   S_L  = state to the left of the interface
-////   S_R  = state to the right of the interface
-////   F(.) = physical flux function
-////   U(.) = conserved variable vector
-////   alpha_{i+1/2} = max wave speed at the interface
-//
-//flux(F1, F2);
-//
-//// 7. Form the residual in conserved variables
-//// R_{i,k} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
-//
-//for (int n = 0; n < X+1; n++){
-//	R[n] = F2[n] - F1[n];
-//	R[n] /= -dx;
-//	R[n] += Q[n];
-//}
-//
-//// 8. Solve the linear system for dS/dt
-//// dS/dt = A^-1 .R
-//
-//// 9. Explicitly advance the state vector
-//// S_{i,k+1} = S_{i,k} + dt*dS/dt 
+flux(S[k][i-1],  S[k][i],F1,&nsp,wsp,asp,hfsp,rsp);
+flux(  S[k][i],S[k][i+1],F2,&nsp,wsp,asp,hfsp,rsp);
+
+// 7. Form the residual in conserved variables
+// R_{i,k} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
+
+dx = x[i+1] - x[i];
+
+for (int n = 0; n < X+1; n++){
+	R[n] = F2[n] - F1[n];
+	R[n] /= -dx;
+	R[n] += Q[n];
+}
+
+// 8. Solve the linear system for dS/dt
+// dS/dt = J^-1 .R
+// J obtained from source is apc (i.e. exactly the matrix we want) 
+
+// Matrix multiplication: C = J * R
+for (int i = 0; i < X+1; i++) {
+        for (int k = 0; k < X+1; k++) {
+            C[i] += J[i][k] * R[k];
+    }
+}
+
+// 9. Explicitly advance the state vector
+// S_{i,k+1} = S_{i,k} + dt*dS/dt 
+
+for (int n=0; n<X+1; n++){
+	S[k+1][i][n] += dt*C[n];
+}
 }}
 
 

@@ -5,7 +5,7 @@ c     two-temperature plasma
       subroutine src_c(nsp_c,nelsp_c,ielsp_c,melsp_c,wsp_c,rsp_c,
      1                 asp_c,hfsp_c,mw_c,cs_c,diss_c,inz_c,apb_c,
      2                 nrn_c,nsprn_c,isprn_c,msprn_c,ktbrn_c,xtbrn_c,
-     3                 arr_c,qp_c,f_c) bind(C, name="src_c")
+     3                 arr_c,qp_c,f_c,J_c) bind(C, name="src_c")
       use iso_c_binding, only: c_int, c_double
 
       implicit none
@@ -55,10 +55,11 @@ c ... local symbols
 
 c ... executable statements
       frlx = 1.d0
+
       call src( nsp_c,nelsp_c,ielsp_c,melsp_c,wsp_c,rsp_c,
      1          asp_c,hfsp_c,mw_c,cs_c,diss_c,inz_c,apb_c,
      1          nrn_c,nsprn_c,isprn_c,msprn_c,ktbrn_c,xtbrn_c, 
-     1          arr_c,t_eq,qp_c,qp_c,rd,g0,df0,df1,f_c,dg0,
+     1          arr_c,t_eq,qp_c,qp_c,rd,g0,df0,df1,f_c,J_c,
      1          dg1,dr,i,k,
      1          dt,qp_c,flg, .true., 0.35d0,frlx,tau)
 

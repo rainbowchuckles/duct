@@ -61,7 +61,7 @@ float l;
 float u1;
 float T1;
 float Tv1;
-float p;
+float p1;
 
 // solution controls
 float conv;
@@ -81,4 +81,4 @@ string colpth;
 double a = 0.0;
 double dc[NSPMAX];
 
-double Aus[NSPMAX][NSPMAX] = {0.0};
+double J[NSPMAX][NSPMAX] = {0.0};

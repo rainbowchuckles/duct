@@ -189,7 +189,7 @@ void read_input_file(char** filename,
                      int&   m,
                      float& l,
                      float& u1,
-                     float& T1,
+                     float& p1,
 		     float& Tv1,
 		     float& conv)
 {
@@ -216,8 +216,8 @@ void read_input_file(char** filename,
             l = value;
         } else if (name == "u1") {
             u1 = value;
-        } else if (name == "T1") {
-            T1 = value;
+        } else if (name == "p1") {
+            p1 = value;
         } else if (name == "Tv1") {
             Tv1 = value;
         } else if (name == "conv") {

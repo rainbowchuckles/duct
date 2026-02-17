@@ -1,5 +1,4 @@
 // Park vars
-
 #define NELMAX 8
 #define NSPMAX 64
 #define NTRMAX 4

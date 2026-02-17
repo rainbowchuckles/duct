@@ -55,6 +55,12 @@ extern "C" void tcw_c(
 
 );
 
+extern "C" {
+    void dgetrf_(int*, int*, double*, int*, int*, int*);
+    void dgetrs_(char*, int*, int*, double*, int*,
+                 int*, double*, int*, int*);
+}
+
 extern "C" void src_c(
     int *nsp,
 
@@ -89,12 +95,14 @@ extern "C" void src_c(
     double arr[NRNMAX][64],
 
     double q[NSPMAX],
-    double f[NSPMAX]
+    double f[NSPMAX],
+    double J[NSPMAX][NSPMAX]
 );
 
 extern "C" void s2c_c(
     double qp[NSPMAX],
     double qc[NSPMAX],
+    double j[NSPMAX][NSPMAX],
     int *nsp,
     double wsp[NSPMAX],
     double asp[NSPMAX][NTRMAX][NACOEF],
@@ -112,3 +120,91 @@ extern "C" void o2c_c(
     double hfsp[NSPMAX],
     double rsp[NSPMAX][4]
 );
+
+extern "C" void snd_c(
+    int *nsp,
+    double wsp[NSPMAX],
+    double asp[NSPMAX][NTRMAX][NACOEF],
+    double hfsp[NSPMAX],
+    double rsp[NSPMAX][4],
+    double qp[NSPMAX],
+    double *a
+);
+
+
+// flux function
+
+void flux(
+    double SL[NSPMAX],
+    double SR[NSPMAX],
+    double F[NSPMAX],
+    //double A[NSPMAX][NSPMAX],
+    int *nsp,
+    double wsp[NSPMAX],
+    double asp[NSPMAX][NTRMAX][NACOEF],
+    double hfsp[NSPMAX],
+    double rsp[NSPMAX][4]
+	) {
+
+// left and right fluxes
+double A[NSPMAX][NSPMAX];
+double FL[NSPMAX] = {0.0};
+double FR[NSPMAX] = {0.0};
+double UL[NSPMAX] = {0.0};
+double UR[NSPMAX] = {0.0};
+
+// nv is the number of variables
+// nsp species + Tv + u + p 
+int nv  = *nsp + 3;
+int Vs  = *nsp;
+int Us  = *nsp+1;
+int Ps  = *nsp+2;
+
+int I = *nsp;
+int E = *nsp+1;
+int X = *nsp+3;
+
+// speed of sound
+double a;
+double aL;
+double aR;
+
+// 1. Evaluate U(S) = [rhoi, ..., rhos, rhoev,rhoE,rhou] -> vector of conserved variables
+
+s2c_c(SL, UL, A, nsp, wsp, asp, hfsp, rsp);
+s2c_c(SR, UR, A, nsp, wsp, asp, hfsp, rsp);
+
+// 2. Evaluate F(S) = [rhoiu, ..., rhosu, rhoevu,rhoHu,rhou^2 + p] -> flux of conserved variables
+
+FL[E] = UL[E] + SL[Ps];
+FR[E] = UR[E] + SR[Ps];
+
+for (int j=0; j<X+1; j++){
+	FL[j] = UL[j]*SL[Us];
+	FR[j] = UR[j]*SR[Us];
+}
+
+FL[X] += SL[Ps];
+FR[X] += SR[Ps];
+
+// 6. For each streamwise cell i evaluate the numerical fluxes:
+// F_{i+1/2} = 0.5 * ( F(S_L) + F(S_R) )
+//             - 0.5 * alpha_{i+1/2} * ( U(S_R) - U(S_L) )
+//
+// where:
+//   S_L  = state to the left of the interface
+//   S_R  = state to the right of the interface
+//   F(.) = physical flux function
+//   U(.) = conserved variable vector
+//   alpha_{i+1/2} = max wave speed at the interface
+
+snd_c(nsp,wsp,asp,hfsp,rsp,SL,&aL);
+snd_c(nsp,wsp,asp,hfsp,rsp,SR,&aR);
+
+a = max(abs(SL[Us])+aL,abs(SR[Us])+aR);
+
+for (int i=0; i<X+1; i++){
+	F[i]  =  0.5*(FL[i]+FR[i]);
+	F[i] += -0.5*a*(UR[i]-UL[i]);
+}
+}
