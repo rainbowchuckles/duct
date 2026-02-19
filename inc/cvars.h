@@ -25,4 +25,4 @@
  	real(c_double)                :: q_c(NSPMAX)
  	real(c_double)                :: f_c(NSPMAX)
  	real(c_double)                :: a_c
- 	real(c_double)                :: J_c(NSPMAX,NRNMAX)
+ 	real(c_double)                :: J_c(NSPMAX,NSPMAX)

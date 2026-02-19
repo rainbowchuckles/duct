@@ -6,87 +6,14 @@
 
 using namespace std;
 
-
-void write_flowfield(
-    const FlowField& q,
-    int m,
-    int t,
-    int nsp,
-    const std::string& filename
-) {
-    std::ofstream file(filename);
-
-    if (!file) {
-        std::cerr << "Error opening file: " << filename << '\n';
-        return;
-    }
-
-    // header (commented for plotting tools)
-    file << "# i  k  rho  u  p\n";
-
-    file << std::scientific << std::setprecision(10);
-
-    for (int k = 0; k < t; ++k) {
-        for (int i = 0; i < m; ++i) {
-            file
-                << i << " "
-                << k << " "; 
-		for (int j =0; j<nsp; j++){
-                file << q(j,i,k) << " ";  // rho
-		}
-            file
-		<< q(nsp,i,k) << " "   // u
-		<< q(nsp+1,i,k) << " "        
-                << q(nsp+2,i,k) << "\n"; // p
-        }
-        file << "\n";  // blank line between time slices (optional)
-    }
-
-    file.close();
-}
-
-void write_outlet(
-    const FlowField& q,
-    int m,
-    int t,
-    int nsp,
-    const std::string& filename
-) {
-    std::ofstream file(filename);
-
-    if (!file) {
-        std::cerr << "Error opening file: " << filename << '\n';
-        return;
-    }
-
-    // header (commented for plotting tools)
-    file << "# i  k  rho  u  p\n";
-
-    file << std::scientific << std::setprecision(10);
-
-    for (int k = 0; k < t; ++k) {
-            file
-                << m-1 << " "
-                << k << " "; 
-		for (int j =0; j<nsp; j++){
-                file << q(j,m-1,k) << " ";  // rho
-		}
-            file
-		<< q(nsp,m-1,k) << " "   // u
-		<< q(nsp+1,m-1,k) << " "   // u
-                << q(nsp+2,m-1,k) << "\n"; // p
-    }
-    file.close();
-}
-
 void write_cl(
-    const FlowField& q,
+    double S[T][M][NSPMAX], 
     int m,
     vector<float> x,
     int t,
     int nsp,
     double wsp[NSPMAX],
-    const std::string& filename
+    const std::string& filename 
 ) {
     float tt;
     float rho;
@@ -107,75 +34,75 @@ void write_cl(
                 << x[i] << " "
                 << t-1 << " "; 
 		for (int j =0; j<nsp; j++){
-                file << q(j,i,t-1) << " ";  // rho
+                file << S[t-1][i][j] << " ";  // rho
 		}
             file
-		<< q(nsp,i,t-1) << " "   // u
-		<< q(nsp+1,i,t-1) << " "   // u
-                << q(nsp+2,i,t-1) << " "; // p
-            tt = calt(q,i,t-1,nsp,wsp);
+		<< S[t-1][i][nsp] << " "   // u
+		<< S[t-1][i][nsp+1] << " "   // u
+                << S[t-1][i][nsp+2] << " "; // p
+            tt = calt(S[t-1][i],nsp,wsp);
             file
 		<< tt << " ";
 	    rho = 0.0;
-	    for (int o = 0; o <nsp; ++o){rho += q(o,i,t-1);}
+	    for (int o = 0; o <nsp; ++o){rho += S[t-1][i][o];}
 	    file
-		<< q(nsp+3,i,t-1) << "\n";
+		<< rho << "\n";
     }
 
     file.close();
 }
 
 
-void write_cl_mole(
-    const FlowField& q,
-    int m,
-    vector<float> x,
-    int t,
-    int nsp,
-    double wsp[NSPMAX],
-    const std::string& filename
-) {
-    float tt;
-    float rho;
-    float r_mix;
-    float peos;
-    float e = 0;
-    std::ofstream file(filename);
-
-    if (!file) {
-        std::cerr << "Error opening file: " << filename << '\n';
-        return;
-    }
-
-    // header (commented for plotting tools)
-    file << "# i  k  rho  u  p t\n";
-
-    file << std::scientific << std::setprecision(10);
-
-    for (int i = 0; i < m; ++i) {
-	    e = 0.0;
-	    for (int o = 0; o <nsp; ++o){e += q(o,i,t-1)/wsp[o];}
-            file
-                << x[i] << " "
-                << t-1 << " "; 
-		for (int j =0; j<nsp; j++){
-                file << q(j,i,t-1)/(wsp[j]*e) << " ";  // mole frac
-		}
-            file
-		<< q(nsp,i,t-1) << " "   // u
-		<< q(nsp+1,i,t-1) << " "   // u
-                << q(nsp+2,i,t-1) << " "; // p
-            tt = calt(q,i,t-1,nsp,wsp);
-            file
-		<< tt << " ";
-	    rho = 0.0;
-	    for (int o = 0; o <nsp; ++o){rho += q(o,i,t-1);}
-	    file
-		<< rho*q(nsp+1,i,t-1) << "\n";
-    }
-
-    file.close();
-}
+//void write_cl_mole(
+//    const FlowField& q,
+//    int m,
+//    vector<float> x,
+//    int t,
+//    int nsp,
+//    double wsp[NSPMAX],
+//    const std::string& filename
+//) {
+//    float tt;
+//    float rho;
+//    float r_mix;
+//    float peos;
+//    float e = 0;
+//    std::ofstream file(filename);
+//
+//    if (!file) {
+//        std::cerr << "Error opening file: " << filename << '\n';
+//        return;
+//    }
+//
+//    // header (commented for plotting tools)
+//    file << "# i  k  rho  u  p t\n";
+//
+//    file << std::scientific << std::setprecision(10);
+//
+//    for (int i = 0; i < m; ++i) {
+//	    e = 0.0;
+//	    for (int o = 0; o <nsp; ++o){e += q(o,i,t-1)/wsp[o];}
+//            file
+//                << x[i] << " "
+//                << t-1 << " "; 
+//		for (int j =0; j<nsp; j++){
+//                file << q(j,i,t-1)/(wsp[j]*e) << " ";  // mole frac
+//		}
+//            file
+//		<< q(nsp,i,t-1) << " "   // u
+//		<< q(nsp+1,i,t-1) << " "   // u
+//                << q(nsp+2,i,t-1) << " "; // p
+//            tt = calt(q,i,t-1,nsp,wsp);
+//            file
+//		<< tt << " ";
+//	    rho = 0.0;
+//	    for (int o = 0; o <nsp; ++o){rho += q(o,i,t-1);}
+//	    file
+//		<< rho*q(nsp+1,i,t-1) << "\n";
+//    }
+//
+//    file.close();
+//}
 
 
 #include <fstream>

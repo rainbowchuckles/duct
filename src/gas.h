@@ -21,33 +21,16 @@ float calp(
 }
 
 float calt(
-    const FlowField& q,
-    int i,
-    int k,
+    double S[NSPMAX],
     int nsp,
     double wsp[NSPMAX] 
 ) {
 	float sum = 0; // working variable
-	for (int j = 1; j<nsp; j++){sum += q(j,i,k)/wsp[j];} 
+	for (int j = 1; j<nsp; j++){sum += S[j]/wsp[j];} 
 	// calculate tt using boyle's law
-	float tt  = q(nsp+2,i,k);
-	tt -= q(0,i,k)*8.314*q(nsp,i,k)/wsp[0];
+	float tt  = S[nsp+2];
+	tt -= S[0]*8.314*S[nsp]/wsp[0];
         tt /= 8.314*sum;	
 	
 	return tt;
-}
-
-float rmix(
-    const FlowField& q,
-    int i,
-    int k,
-    int nsp,
-    double wsp[NSPMAX] 
-) {
-	float sum = 0; // working variable
-        float rmix = 0;
-
-	for (int j=0; j<nsp; j++){sum += q(j,i,k)/wsp[j];}
-        rmix = 8.314/sum;		
-	return rmix;
 }

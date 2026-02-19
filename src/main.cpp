@@ -9,7 +9,6 @@
 
 // variable definitions
 #include "size.h"
-#include "class.h"
 #include "gas.h"
 #include "io.h"
 #include "func.h"
@@ -49,10 +48,14 @@ cout << endl;
 
 // x is the vector of physical grid locations
 vector<float> x(m);
+double dx = 0.001;
 
 // populate the grid vector
-for (int i = 0; i < m; i++){x[i] = static_cast<float>(i)/static_cast<float>(m);}
-for (int i = 0; i < m; i++){x[i] *= l;}
+for (int i = 1; i < m; i++){
+	x[i] = x[i-1] + dx;
+	dx = 1.02*dx;
+}
+for (int i = 0; i < m; i++){x[i] *= l/x[m-1];}
 
 // the area function
 vector<float> A(m,1.0f);
@@ -65,8 +68,8 @@ vector<float> A(m,1.0f);
 // e- N O N2 NO O2 
 double rho = 0.0; 
 vector<float> rho1(nsp,0e-3);
-rho1[3] = 0.00687;
-rho1[5] = 0.002086;
+rho1[5] = 0.00687;
+rho1[7] = 0.002086;
 
 
 // assemble the initial vector of primitive variables
@@ -79,24 +82,21 @@ for (int i=0; i<m+1; i++){
 	qp[Ps] = p1;
 }}
 
-// double
-double dx;
-
 // the flow vector
-double S[t+1][m+1][nv] = {0.0};
-double U[t+1][m+1][nv] = {0.0};
+double S[T][M][NSPMAX] = {0.0};
+double U[T][M][NSPMAX] = {0.0};
 
 // the flux vectors
-double F1[nv]  = {0.0};
-double F2[nv] = {0.0};
+double F1[NSPMAX]  = {0.0};
+double F2[NSPMAX] = {0.0};
 
 // source vectors
-double G[nv]  = {0.0};
-double Q[nv]  = {0.0};
+double G[NSPMAX]  = {0.0};
+double Q[NSPMAX]  = {0.0};
 
 // residual vector
-double R[nv]  = {0.0};
-double C[nv]  = {0.0};
+double R[NSPMAX]  = {0.0};
+double C[NSPMAX]  = {0.0};
 
 // initialise the solver
 for (int k=0; k<t+1; k++){
@@ -109,11 +109,10 @@ S[k][i][Ps] = qp[Ps];
 
 // the main loop
 for (int k=0; k<t+1; k++){
-for (int i=1; i<m+1; i++){
-
+for (int i=1; i<m; i++){
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
-
-//G[X] = p*dA/dx;
+double dA = A[i+1] - A[i];
+//G[X] = 0.001*S[k][i][Ps]*dA/dx;
 
 // 4. Evaluate Q - > vector of thermochemical source terms
 for (int j=0; j<Ps+1; j++){qp[j] = S[k][i][j];}
@@ -134,15 +133,23 @@ src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn
 flux(S[k][i-1],  S[k][i],F1,&nsp,wsp,asp,hfsp,rsp);
 flux(  S[k][i],S[k][i+1],F2,&nsp,wsp,asp,hfsp,rsp);
 
+// supersonic outlet
+if (i == m-1){
+for (int n = 0; n<X+1; n++){
+		F2[n] = F1[n];
+		}
+}
+
 // 7. Form the residual in conserved variables
 // R_{i,k} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
 
 dx = x[i+1] - x[i];
-
 for (int n = 0; n < X+1; n++){
 	R[n] = F2[n] - F1[n];
 	R[n] /= -dx;
 	R[n] += Q[n];
+	R[n] += G[n];
+
 }
 
 // 8. Solve the linear system for dS/dt
@@ -150,26 +157,41 @@ for (int n = 0; n < X+1; n++){
 // J obtained from source is apc (i.e. exactly the matrix we want) 
 
 // Matrix multiplication: C = J * R
-for (int i = 0; i < X+1; i++) {
-        for (int k = 0; k < X+1; k++) {
-            C[i] += J[i][k] * R[k];
-    }
-}
 
+for (int j = 0; j < Ps+1; j++) {
+	C[j] = 0.0;
+ for (int n=0; n<X+1; n++){
+            C[j] += J[n][j] * R[n];
+	}
+}
 // 9. Explicitly advance the state vector
 // S_{i,k+1} = S_{i,k} + dt*dS/dt 
-
-for (int n=0; n<X+1; n++){
-	S[k+1][i][n] += dt*C[n];
+for (int n=0; n<Ps+1; n++){
+	S[k+1][i][n] = S[k][i][n] + dt*C[n];
 }
-}}
 
+
+if (i == m-1){
+for (int n=0; n<Ps+1; n++){
+	S[k+1][i][n] = S[k+1][i-1][n];
+}
+
+
+}
+
+
+}
+if (k % 100 == 0){
+	cout << k << " " << static_cast<float>(k)*dt << endl;
+	write_cl(S, m, x, k, nsp, wsp, "../out/cl.dat");
+}
+}
 
 
 
 // output the centerline profile to text
 //post:
-//write_cl( q, m, x, w, nsp, wsp, "../out/cl.dat");
+write_cl(S, m, x, t-2, nsp, wsp, "../out/cl.dat");
 //write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
 //cout << endl;
 //cout << "Ran to completion. " << endl;
