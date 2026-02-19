@@ -60,14 +60,14 @@ for (int i = 0; i < m; i++){x[i] *= l/x[m-1];}
 // the area function
 vector<float> A(m,1.0f);
 
-//for (int i =0; i<m; i++){
-//	A[i] += 1*4.64*static_cast<float>(i)/m;
-//}
+for (int i =0; i<m; i++){
+	A[i] += 1*4.64*static_cast<float>(i)/m;
+}
 
 
 // e- N O N2 NO O2 
 double rho = 0.0; 
-vector<float> rho1(nsp,0e-3);
+vector<float> rho1(nsp,0.0);
 rho1[5] = 0.00687;
 rho1[7] = 0.002086;
 
@@ -106,13 +106,18 @@ S[k][i][Vs] = qp[Vs];
 S[k][i][Us] = qp[Us];
 S[k][i][Ps] = qp[Ps];
 }}
+for (int k=0; k<t+1; k++){
+for (int i=1; i<m+1; i++){
+S[k][i][Ps] = 24627;
+}}
 
 // the main loop
 for (int k=0; k<t+1; k++){
 for (int i=1; i<m; i++){
+
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
 double dA = A[i+1] - A[i];
-//G[X] = 0.001*S[k][i][Ps]*dA/dx;
+G[X] = S[k][i][Ps]*dA/dx;
 
 // 4. Evaluate Q - > vector of thermochemical source terms
 for (int j=0; j<Ps+1; j++){qp[j] = S[k][i][j];}
@@ -141,15 +146,14 @@ for (int n = 0; n<X+1; n++){
 }
 
 // 7. Form the residual in conserved variables
-// R_{i,k} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
+// R_{i} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
 
 dx = x[i+1] - x[i];
 for (int n = 0; n < X+1; n++){
-	R[n] = F2[n] - F1[n];
+	R[n] =  F2[n] - F1[n];
 	R[n] /= -dx;
 	R[n] += Q[n];
 	R[n] += G[n];
-
 }
 
 // 8. Solve the linear system for dS/dt
@@ -164,6 +168,7 @@ for (int j = 0; j < Ps+1; j++) {
             C[j] += J[n][j] * R[n];
 	}
 }
+
 // 9. Explicitly advance the state vector
 // S_{i,k+1} = S_{i,k} + dt*dS/dt 
 for (int n=0; n<Ps+1; n++){
@@ -171,14 +176,12 @@ for (int n=0; n<Ps+1; n++){
 }
 
 
+// supersonic outlet
 if (i == m-1){
-for (int n=0; n<Ps+1; n++){
-	S[k+1][i][n] = S[k+1][i-1][n];
+for (int n = 0; n<X+1; n++){
+		S[k+1][i][n] = S[k+1][i-1][n];
+		}
 }
-
-
-}
-
 
 }
 if (k % 100 == 0){
