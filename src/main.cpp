@@ -35,7 +35,7 @@ tcw_c(inp,&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,i
 #include "macro.h"
 
 // read the user input file
-read_input_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1, conv);
+read_config_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1, conv);
 
 cout << "Inlet conditions: " << endl;
 cout << endl;
@@ -64,6 +64,31 @@ for (int i =0; i<m; i++){
 	A[i] += 1*4.64*static_cast<float>(i)/m;
 }
 
+// read inlet file
+vector<vector<double>> inlet;
+vector<vector<double>> data;
+
+read_inlet_file("inlet.dat",inlet);
+
+// interpolate inlet file to match time grid
+double Si[T][NSPMAX] = {0.0};
+double y2[T];
+
+std::vector<double> col3(T);
+col3[0] = 0.0;
+for (int k = 1; k < t; k++){col3[k] = col3[k-1] + dt;}
+
+for (int o = 0; o < Ps+1; o++){
+	vector<double> col0 = getColumn(inlet, 1  );
+	vector<double> col1 = getColumn(inlet, o+2);
+	linterp(col0.data(),col1.data(),inlet.size(),col3.data(),y2,t);
+	for (int i = 0; i < t; ++i){
+		Si[i][o]  = y2[i];
+	if (o == Us){
+		Si[i][o]  = -y2[i];
+	}
+	}
+}
 
 // e- N O N2 NO O2 
 double rho = 0.0; 
@@ -73,7 +98,6 @@ rho1[7] = 0.002086;
 
 
 // assemble the initial vector of primitive variables
-
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
 	for (int j=0; j<nsp; j++){qp[j] = rho1[j];}
@@ -99,20 +123,31 @@ double R[NSPMAX]  = {0.0};
 double C[NSPMAX]  = {0.0};
 
 // initialise the solver
+//for (int k=0; k<t+1; k++){
+//for (int i=0; i<m+1; i++){
+//for (int j=0; j<nsp; j++){S[k][i][j] = qp[j];}
+//S[k][i][Vs] = qp[Vs];
+//S[k][i][Us] = qp[Us];
+//S[k][i][Ps] = qp[Ps];
+//}}
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
-for (int j=0; j<nsp; j++){S[k][i][j] = qp[j];}
-S[k][i][Vs] = qp[Vs];
-S[k][i][Us] = qp[Us];
-S[k][i][Ps] = qp[Ps];
-}}
-for (int k=0; k<t+1; k++){
-for (int i=1; i<m+1; i++){
-S[k][i][Ps] = 24627;
+for (int j=0; j<nsp; j++){S[k][i][j] = Si[0][j];}
+S[k][i][Vs] = Si[0][Vs];
+S[k][i][Us] = Si[0][Us];
+S[k][i][Ps] = Si[0][Ps];
 }}
 
 // the main loop
 for (int k=0; k<t+1; k++){
+
+// apply the inlet boundary condition
+for (int j=0; j<nsp; j++){S[k][0][j] = Si[0][j];}
+
+if (k > 15000){
+for (int j=0; j<nsp; j++){S[k][0][j] = Si[k-15000][j];}
+}
+
 for (int i=1; i<m; i++){
 
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
@@ -186,7 +221,8 @@ for (int n = 0; n<X+1; n++){
 }
 if (k % 100 == 0){
 	cout << k << " " << static_cast<float>(k)*dt << endl;
-	write_cl(S, m, x, k, nsp, wsp, "../out/cl.dat");
+	write_cl(S, m, x, k, dt, nsp, wsp, "../out/cl.dat");
+	write_outlet(S, m, x, t, dt, nsp, wsp, "../out/outlet.dat");
 }
 }
 
@@ -194,7 +230,8 @@ if (k % 100 == 0){
 
 // output the centerline profile to text
 //post:
-write_cl(S, m, x, t-2, nsp, wsp, "../out/cl.dat");
+write_cl(S, m, x, t-2, dt, nsp, wsp, "../out/cl.dat");
+write_outlet(S, m, x, t, dt, nsp, wsp, "../out/outlet.dat");
 //write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
 //cout << endl;
 //cout << "Ran to completion. " << endl;

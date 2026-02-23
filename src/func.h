@@ -208,3 +208,69 @@ for (int i=0; i<X+1; i++){
 	F[i] += -0.5*a*(UR[i]-UL[i]);
 }
 }
+
+
+
+// robust linear interpolation
+void linterp(const double* x1,
+             const double* y1,
+             int l1,
+             const double* x2,
+             double* y2,
+             int l2)
+{
+    if (!x1 || !y1 || !x2 || !y2) return;
+    if (l1 < 2 || l2 <= 0) return;
+
+    int i = 0;  // interval index for x1
+
+    for (int j = 0; j < l2; ++j)
+    {
+        double xx = x2[j];
+
+        // ---- BELOW RANGE ----
+        if (xx <= x1[0])
+        {
+            y2[j] = y1[0];
+            continue;
+        }
+
+        // ---- ABOVE RANGE ----
+        if (xx >= x1[l1 - 1])
+        {
+            y2[j] = y1[l1 - 1];
+            continue;
+        }
+
+        // ---- FIND INTERVAL ----
+        while (i + 1 < l1 && xx > x1[i + 1])
+        {
+            ++i;
+        }
+
+        // Linear interpolation inside interval [i, i+1]
+        double xL = x1[i];
+        double xR = x1[i + 1];
+        double yL = y1[i];
+        double yR = y1[i + 1];
+
+        double t = (xx - xL) / (xR - xL);
+        y2[j] = yL + t * (yR - yL);
+    }
+}
+
+// extract column
+
+std::vector<double> getColumn(const std::vector<std::vector<double>>& data,
+                              size_t columnIndex)
+{
+    std::vector<double> column;
+
+    for (const auto& row : data)
+    {
+        if (columnIndex < row.size())
+            column.push_back(row[columnIndex]);
+    }
+
+    return column;
+}
