@@ -152,7 +152,7 @@ for (int i=1; i<m; i++){
 
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
 double dA = A[i+1] - A[i];
-G[X] = S[k][i][Ps]*dA/dx;
+G[X] = S[k][i][Ps]*dA/(dx*A[i]);
 
 // 4. Evaluate Q - > vector of thermochemical source terms
 for (int j=0; j<Ps+1; j++){qp[j] = S[k][i][j];}
