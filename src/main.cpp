@@ -68,7 +68,7 @@ for (int i = 1; i < m; i++){
 // convert to dimensional
 for (int i = 1; i < m; i++){
         x[i] *= l[s]/x[m-1];
-	A[i] = 1.0 + 4.64*static_cast<float>(i)/static_cast<float>(m);
+	A[i] = 1.0 + 1.0*4.64*static_cast<float>(i)/static_cast<float>(m);
 }
 A[0] = 1.0;
 // interpolate to find area for given x grid 
@@ -166,6 +166,7 @@ for (int i=1; i<m; i++){
 
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
 double dA = A[i] - A[i-1];
+dx = x[i] - x[i-1];
 G[X] = S[k][i][Ps]*dA/(dx*A[i]);
 
 // 4. Evaluate Q - > vector of thermochemical source terms
@@ -197,7 +198,6 @@ for (int n = 0; n<X+1; n++){
 // 7. Form the residual in conserved variables
 // R_{i} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
 
-dx = x[i+1] - x[i];
 for (int n = 0; n < X+1; n++){
 	R[n] =  F2[n] - F1[n];
 	R[n] /= -dx;

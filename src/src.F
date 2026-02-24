@@ -64,7 +64,6 @@ c ... executable statements
      1          dg1,dr,i,k,
      1          dt,qp_c,flg, .true., 0.35d0,frlx,tau)
 
-
       return 
 
       end
