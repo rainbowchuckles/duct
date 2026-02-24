@@ -54,9 +54,6 @@ float dt;
 // m is the number of grid points
 int m;
 
-// l is the length of the domain
-float l;
-
 // the inlet boundary condition
 float u1;
 float T1;

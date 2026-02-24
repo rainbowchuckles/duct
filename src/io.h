@@ -9,7 +9,7 @@ using namespace std;
 void write_cl(
     double S[T][M][NSPMAX], 
     int m,
-    vector<float> x,
+    vector<double> x,
     int t,
     float dt,
     int nsp,
@@ -61,7 +61,7 @@ void write_cl(
 void write_outlet(
     double S[T][M][NSPMAX], 
     int m,
-    vector<float> x,
+    vector<double> x,
     int t,
     float dt,
     int nsp,
@@ -84,7 +84,7 @@ void write_outlet(
 
     for (int k = 0; k < t; ++k) {
             file
-                << x[m-1] << " "
+                << x[1] << " "
                 << static_cast<float>(k)*dt << " "; 
 		for (int j =0; j<nsp; j++){
                 file << S[k][m-1][j] << " ";  // rho
@@ -115,7 +115,6 @@ void read_config_file(char** filename,
                      int&   t,
                      float& dt,
                      int&   m,
-                     float& l,
                      float& u1,
                      float& p1,
 		     float& Tv1,
@@ -140,8 +139,6 @@ void read_config_file(char** filename,
             dt = value;
         } else if (name == "m") {
             m = static_cast<int>(value);
-        } else if (name == "l") {
-            l = value;
         } else if (name == "u1") {
             u1 = value;
         } else if (name == "p1") {
@@ -247,4 +244,35 @@ bool read_inlet_file(const std::string& filename,
 
     file.close();
     return true;
+}
+
+
+// read nozzle geometry
+void read_nozzle_file(char** filename,
+                      vector<double>& x,
+                      vector<double>& A,
+                      int& s)
+{
+    // filename points to a C-string (e.g. argv + 1), so dereference it:
+    const char* fname = *filename;      // same as filename[0]
+    std::ifstream file(fname);
+    if (!file) {
+        throw std::runtime_error(std::string("Could not open geometry file: ") + fname);
+    }
+
+    std::vector<std::vector<double>> data(2);  // 2 rows
+    double col1, col2;
+
+    // read x and y points into data
+    int i = 0;
+    while (file >> col1 >> col2) {
+            x[i] = col1;
+            A[i] = 3.1415*col2*col2;
+            i++;
+    }
+    s = i-1;
+    file.close();
+
+    return;
+
 }

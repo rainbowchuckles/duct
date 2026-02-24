@@ -18,7 +18,7 @@ using namespace std;
 // the main program
 
 int main(int argc, char** argv) {
-    if (argc < 2) {
+    if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " input_filename\n";
         return 1;
     }
@@ -35,7 +35,7 @@ tcw_c(inp,&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,i
 #include "macro.h"
 
 // read the user input file
-read_config_file(argv + 1, gam, t, dt, m, l, u1, p1, Tv1, conv);
+read_config_file(argv + 1, gam, t, dt, m, u1, p1, Tv1, conv);
 
 cout << "Inlet conditions: " << endl;
 cout << endl;
@@ -46,23 +46,33 @@ cout << endl;
 cout << "---------------------" << endl;
 cout << endl;
 
-// x is the vector of physical grid locations
-vector<float> x(m);
+// setup the grid and area function
+vector<double> x(m);
 double dx = 0.001;
-
-// populate the grid vector
-for (int i = 1; i < m; i++){
-	x[i] = x[i-1] + dx;
-	dx = 1.02*dx;
-}
-for (int i = 0; i < m; i++){x[i] *= l/x[m-1];}
+vector<double> l(N,0.0);
+vector<double> Ai(N,1.0f);
+vector<double> A(m,0.0f);
+double dA;
+double d;
+int s;
+bool flag;
 
 // the area function
-vector<float> A(m,1.0f);
+read_nozzle_file(argv + 3, l, Ai, s);
 
-for (int i =0; i<m; i++){
-	A[i] += 1*4.64*static_cast<float>(i)/m;
+// create the grid in non-dimensional coordinates
+for (int i = 1; i < m; i++){
+        x[i] = x[i-1] + dx;
+        dx = 1.00*dx;
 }
+// convert to dimensional
+for (int i = 1; i < m; i++){
+        x[i] *= l[s]/x[m-1];
+	A[i] = 1.0 + 4.64*static_cast<float>(i)/static_cast<float>(m);
+}
+A[0] = 1.0;
+// interpolate to find area for given x grid 
+//linterp( l.data(), Ai.data(), s, x.data(), A.data(), m);
 
 // read inlet file
 vector<vector<double>> inlet;
@@ -93,8 +103,8 @@ for (int o = 0; o < Ps+1; o++){
 // e- N O N2 NO O2 
 double rho = 0.0; 
 vector<float> rho1(nsp,0.0);
-rho1[5] = 0.00687;
-rho1[7] = 0.002086;
+rho1[3] = 0.00610;
+rho1[5] = 0.00185;
 
 
 // assemble the initial vector of primitive variables
@@ -123,35 +133,39 @@ double R[NSPMAX]  = {0.0};
 double C[NSPMAX]  = {0.0};
 
 // initialise the solver
-//for (int k=0; k<t+1; k++){
-//for (int i=0; i<m+1; i++){
-//for (int j=0; j<nsp; j++){S[k][i][j] = qp[j];}
-//S[k][i][Vs] = qp[Vs];
-//S[k][i][Us] = qp[Us];
-//S[k][i][Ps] = qp[Ps];
-//}}
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m+1; i++){
-for (int j=0; j<nsp; j++){S[k][i][j] = Si[0][j];}
-S[k][i][Vs] = Si[0][Vs];
-S[k][i][Us] = Si[0][Us];
-S[k][i][Ps] = Si[0][Ps];
+for (int j=0; j<nsp; j++){S[k][i][j] = qp[j];}
+S[k][i][Vs] = qp[Vs];
+S[k][i][Us] = qp[Us];
+S[k][i][Ps] = qp[Ps];
 }}
+for (int k=0; k<t+1; k++){
+for (int i=1; i<m+1; i++){
+for (int j=0; j<nsp; j++){S[k][i][j] =0.1* qp[j];}
+S[k][i][Vs] = qp[Vs];
+S[k][i][Us] = qp[Us];
+S[k][i][Ps] = qp[Ps];
+}}
+//for (int k=0; k<t+1; k++){
+//for (int i=0; i<m+1; i++){
+//for (int j=0; j<Ps+1; j++){S[k][i][j] = Si[0][j];}
+//}}
 
 // the main loop
 for (int k=0; k<t+1; k++){
 
-// apply the inlet boundary condition
-for (int j=0; j<nsp; j++){S[k][0][j] = Si[0][j];}
-
-if (k > 15000){
-for (int j=0; j<nsp; j++){S[k][0][j] = Si[k-15000][j];}
-}
+//// apply the inlet boundary condition
+//for (int j=0; j<Ps+1; j++){S[k][0][j] = Si[0][j];}
+//
+//if (k > 10000){
+//for (int j=0; j<Ps+1; j++){S[k][0][j] = Si[k-10000][j];}
+//}
 
 for (int i=1; i<m; i++){
 
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
-double dA = A[i+1] - A[i];
+double dA = A[i] - A[i-1];
 G[X] = S[k][i][Ps]*dA/(dx*A[i]);
 
 // 4. Evaluate Q - > vector of thermochemical source terms
@@ -187,7 +201,7 @@ dx = x[i+1] - x[i];
 for (int n = 0; n < X+1; n++){
 	R[n] =  F2[n] - F1[n];
 	R[n] /= -dx;
-	R[n] += Q[n];
+	//R[n] += Q[n];
 	R[n] += G[n];
 }
 
@@ -219,7 +233,7 @@ for (int n = 0; n<X+1; n++){
 }
 
 }
-if (k % 100 == 0){
+if (k % 250 == 0){
 	cout << k << " " << static_cast<float>(k)*dt << endl;
 	write_cl(S, m, x, k, dt, nsp, wsp, "../out/cl.dat");
 	write_outlet(S, m, x, t, dt, nsp, wsp, "../out/outlet.dat");
@@ -229,12 +243,11 @@ if (k % 100 == 0){
 
 
 // output the centerline profile to text
-//post:
+
 write_cl(S, m, x, t-2, dt, nsp, wsp, "../out/cl.dat");
 write_outlet(S, m, x, t, dt, nsp, wsp, "../out/outlet.dat");
-//write_cl_mole( q, m, x, w, nsp, wsp, "../out/cl_mole.dat");
-//cout << endl;
-//cout << "Ran to completion. " << endl;
+
+cout << "Ran to completion. " << endl;
 
 
 return 0;
