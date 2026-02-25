@@ -121,6 +121,7 @@ double S[T][M][NSPMAX] = {0.0};
 double U[T][M][NSPMAX] = {0.0};
 
 // the flux vectors
+double  F[NSPMAX]  = {0.0};
 double F1[NSPMAX]  = {0.0};
 double F2[NSPMAX] = {0.0};
 
@@ -134,23 +135,9 @@ double C[NSPMAX]  = {0.0};
 
 // initialise the solver
 for (int k=0; k<t+1; k++){
-for (int i=0; i<m+1; i++){
-for (int j=0; j<nsp; j++){S[k][i][j] = qp[j];}
-S[k][i][Vs] = qp[Vs];
-S[k][i][Us] = qp[Us];
-S[k][i][Ps] = qp[Ps];
+for (int i=0; i<m; i++){
+for (int j=0; j<Ps+1; j++){S[k][i][j] = qp[j];}
 }}
-for (int k=0; k<t+1; k++){
-for (int i=1; i<m+1; i++){
-for (int j=0; j<nsp; j++){S[k][i][j] =0.1* qp[j];}
-S[k][i][Vs] = qp[Vs];
-S[k][i][Us] = qp[Us];
-S[k][i][Ps] = qp[Ps];
-}}
-//for (int k=0; k<t+1; k++){
-//for (int i=0; i<m+1; i++){
-//for (int j=0; j<Ps+1; j++){S[k][i][j] = Si[0][j];}
-//}}
 
 // the main loop
 for (int k=0; k<t+1; k++){
@@ -165,9 +152,16 @@ for (int k=0; k<t+1; k++){
 for (int i=1; i<m; i++){
 
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
-double dA = A[i] - A[i-1];
+flux1(  S[k][i],F,&nsp,wsp,asp,hfsp,rsp);
+
+dA = A[i] - A[i-1];
 dx = x[i] - x[i-1];
-G[X] = S[k][i][Ps]*dA/(dx*A[i]);
+
+for (int j=0; j<X+1; j++){
+	G[j] = 0.0;
+	G[j] = -F[j]*dA/(dx*A[i]);
+}
+G[X] += S[k][i][Ps]*dA/(A[i]*dx);
 
 // 4. Evaluate Q - > vector of thermochemical source terms
 for (int j=0; j<Ps+1; j++){qp[j] = S[k][i][j];}
@@ -188,6 +182,7 @@ src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn
 flux(S[k][i-1],  S[k][i],F1,&nsp,wsp,asp,hfsp,rsp);
 flux(  S[k][i],S[k][i+1],F2,&nsp,wsp,asp,hfsp,rsp);
 
+
 // supersonic outlet
 if (i == m-1){
 for (int n = 0; n<X+1; n++){
@@ -195,13 +190,14 @@ for (int n = 0; n<X+1; n++){
 		}
 }
 
+
 // 7. Form the residual in conserved variables
 // R_{i} = -(1/dx)*(F_{i+1/2} - F_{i-1/2}) + Q
 
 for (int n = 0; n < X+1; n++){
-	R[n] =  F2[n] - F1[n];
+	R[n] = F2[n] - F1[n];
 	R[n] /= -dx;
-	//R[n] += Q[n];
+	//R[n] += A[i]*Q[n];
 	R[n] += G[n];
 }
 

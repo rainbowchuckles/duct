@@ -21,7 +21,7 @@ FOBJ := $(FSRC:.F=.o)
 all: $(TARGET)
 
 # Libraries
-LIBS= /home/joesteer/slime/src/liblasta2.a -L/$(HOME)/lib -locean -llapack -lblas
+LIBS= /home/lib/liblasta2.a -L/$(HOME)/lib -locean -llapack -lblas
 
 # Link step - use g++ as the linker and add Fortran runtime libraries
 # Order: C++ objects, Fortran objects, external libs, Fortran runtime libs

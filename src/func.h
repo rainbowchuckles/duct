@@ -210,6 +210,60 @@ for (int i=0; i<X+1; i++){
 }
 
 
+// flux function
+
+void flux1(
+    double SL[NSPMAX],
+    double F[NSPMAX],
+    //double A[NSPMAX][NSPMAX],
+    int *nsp,
+    double wsp[NSPMAX],
+    double asp[NSPMAX][NTRMAX][NACOEF],
+    double hfsp[NSPMAX],
+    double rsp[NSPMAX][4]
+	) {
+
+// left and right fluxes
+double A[NSPMAX][NSPMAX];
+double FL[NSPMAX] = {0.0};
+double FR[NSPMAX] = {0.0};
+double UL[NSPMAX] = {0.0};
+double UR[NSPMAX] = {0.0};
+
+// nv is the number of variables
+// nsp species + Tv + u + p 
+int nv  = *nsp + 3;
+int Vs  = *nsp;
+int Us  = *nsp+1;
+int Ps  = *nsp+2;
+
+int I = *nsp;
+int E = *nsp+1;
+int X = *nsp+3;
+
+// speed of sound
+double a;
+double aL;
+double aR;
+
+// 1. Evaluate U(S) = [rhoi, ..., rhos, rhoev,rhoE,rhou] -> vector of conserved variables
+
+s2c_c(SL, UL, A, nsp, wsp, asp, hfsp, rsp);
+
+// 2. Evaluate F(S) = [rhoiu, ..., rhosu, rhoevu,rhoHu,rhou^2 + p] -> flux of conserved variables
+
+FL[E] = UL[E] + SL[Ps];
+
+for (int j=0; j<X+1; j++){
+	FL[j] = UL[j]*SL[Us];
+}
+
+FL[X] += SL[Ps];
+
+for (int j=0; j<X+1; j++){
+	F[j] = FL[j];
+}
+}
 
 // robust linear interpolation
 void linterp(const double* x1,
