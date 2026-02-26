@@ -68,17 +68,16 @@ for (int i = 1; i < m; i++){
 // convert to dimensional
 for (int i = 1; i < m; i++){
         x[i] *= l[s]/x[m-1];
-	A[i] = 1.0 + 1.0*4.64*static_cast<float>(i)/static_cast<float>(m);
 }
-A[0] = 1.0;
+
 // interpolate to find area for given x grid 
-//linterp( l.data(), Ai.data(), s, x.data(), A.data(), m);
+linterp( l.data(), Ai.data(), s, x.data(), A.data(), m);
 
 // read inlet file
 vector<vector<double>> inlet;
 vector<vector<double>> data;
 
-read_inlet_file("inlet.dat",inlet);
+read_inlet_file("inlet1.dat",inlet);
 
 // interpolate inlet file to match time grid
 double Si[T][NSPMAX] = {0.0};
@@ -136,18 +135,20 @@ double C[NSPMAX]  = {0.0};
 // initialise the solver
 for (int k=0; k<t+1; k++){
 for (int i=0; i<m; i++){
-for (int j=0; j<Ps+1; j++){S[k][i][j] = qp[j];}
+for (int j=0; j<nsp; j++){S[k][i][j] = 0.0;}
+S[k][i][3]  = 1.06e-3;
+S[k][i][5]  = 3.23e-4;
+S[k][i][Vs] = 500;
+S[k][i][Us] = 0;
+S[k][i][Ps] = 120;
 }}
 
 // the main loop
 for (int k=0; k<t+1; k++){
 
-//// apply the inlet boundary condition
-//for (int j=0; j<Ps+1; j++){S[k][0][j] = Si[0][j];}
-//
-//if (k > 10000){
-//for (int j=0; j<Ps+1; j++){S[k][0][j] = Si[k-10000][j];}
-//}
+// apply the inlet boundary condition
+
+for (int j=0; j<Ps+1; j++){S[k][0][j] = Si[k][j];}
 
 for (int i=1; i<m; i++){
 
@@ -197,7 +198,7 @@ for (int n = 0; n<X+1; n++){
 for (int n = 0; n < X+1; n++){
 	R[n] = F2[n] - F1[n];
 	R[n] /= -dx;
-	//R[n] += A[i]*Q[n];
+	R[n] += Q[n];
 	R[n] += G[n];
 }
 

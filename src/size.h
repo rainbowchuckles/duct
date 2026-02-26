@@ -6,6 +6,6 @@
 #define NRNMAX 128
 
 // array sizes
-#define M 300 
-#define T 36000
-#define N 36000
+#define M 600 
+#define T 26000
+#define N 26000
