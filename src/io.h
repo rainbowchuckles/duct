@@ -35,17 +35,17 @@ void write_cl(
                 << x[i] << " "
                 << static_cast<float>(t-1)*dt << " "; 
 		for (int j =0; j<nsp; j++){
-                file << S[t-1][i][j] << " ";  // rho
+                file << S[0][i][j] << " ";  // rho
 		}
             file
-		<< S[t-1][i][nsp] << " "   // u
-		<< S[t-1][i][nsp+1] << " "   // u
-                << S[t-1][i][nsp+2] << " "; // p
-            tt = calt(S[t-1][i],nsp,wsp);
+		<< S[0][i][nsp] << " "   // u
+		<< S[0][i][nsp+1] << " "   // u
+                << S[0][i][nsp+2] << " "; // p
+            tt = calt(S[0][i],nsp,wsp);
             file
 		<< tt << " ";
 	    rho = 0.0;
-	    for (int o = 0; o <nsp; ++o){rho += S[t-1][i][o];}
+	    for (int o = 0; o <nsp; ++o){rho += S[0][i][o];}
 	    file
 		<< rho << "\n";
     }
@@ -58,52 +58,64 @@ void write_cl(
 
 // write temporal outlet profile
 
+#include <filesystem>  // C++17
+
 void write_outlet(
-    double S[T][M][NSPMAX], 
+    double S[T][M][NSPMAX],
     int m,
     vector<double> x,
     int t,
     float dt,
     int nsp,
     double wsp[NSPMAX],
-    const std::string& filename 
+    const std::string& filename
 ) {
     float tt;
     float rho;
-    std::ofstream file(filename);
+
+    bool file_exists = std::filesystem::exists(filename);
+
+    std::ofstream file(filename, std::ios::app);
 
     if (!file) {
         std::cerr << "Error opening file: " << filename << '\n';
         return;
     }
 
-    // header (commented for plotting tools)
-    file << "# i  k  rho  u  p t\n";
+    // Write header only if file didn't exist before
+    if (!file_exists) {
+        file << "# i  k  rho  u  p t\n";
+    }
 
     file << std::scientific << std::setprecision(10);
 
-    for (int k = 0; k < t; ++k) {
-            file
-                << x[1] << " "
-                << static_cast<float>(k)*dt << " "; 
-		for (int j =0; j<nsp; j++){
-                file << S[k][m-1][j] << " ";  // rho
-		}
-            file
-		<< S[k][m-1][nsp] << " "   // u
-		<< S[k][m-1][nsp+1] << " "   // u
-                << S[k][m-1][nsp+2] << " "; // p
-            tt = calt(S[k][m-1],nsp,wsp);
-            file
-		<< tt << " ";
-	    rho = 0.0;
-	    for (int o = 0; o <nsp; ++o){rho += S[k][m-1][o];}
-	    file
-		<< rho << "\n";
+    // write current step
+    file
+        << x[1] << " "
+        << static_cast<float>(t) * dt << " ";
+
+    for (int j = 0; j < nsp; j++) {
+        file << S[0][m-1][j] << " ";
     }
+
+    file
+        << S[0][m-1][nsp]   << " "
+        << S[0][m-1][nsp+1] << " "
+        << S[0][m-1][nsp+2] << " ";
+
+    tt = calt(S[0][m-1], nsp, wsp);
+    file << tt << " ";
+
+    rho = 0.0;
+    for (int o = 0; o < nsp; ++o) {
+        rho += S[0][m-1][o];
+    }
+
+    file << rho << "\n";
 
     file.close();
 }
+
 
 
 #include <fstream>

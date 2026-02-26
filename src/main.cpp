@@ -25,6 +25,11 @@ int main(int argc, char** argv) {
 
 #include "vars.h"
 
+
+// clean up previous run
+
+remove("../out/outlet.dat");
+
 // initialise the non-equilibrium model
 // tcw_c is a wrapper for the OCEAN Fortran functions in tcw.F
 const char* inp = argv[2];
@@ -80,10 +85,10 @@ vector<vector<double>> data;
 read_inlet_file("inlet1.dat",inlet);
 
 // interpolate inlet file to match time grid
-double Si[T][NSPMAX] = {0.0};
-double y2[T];
+double Si[N][NSPMAX] = {0.0};
+double y2[N];
 
-std::vector<double> col3(T);
+std::vector<double> col3(N);
 col3[0] = 0.0;
 for (int k = 1; k < t; k++){col3[k] = col3[k-1] + dt;}
 
@@ -107,7 +112,7 @@ rho1[5] = 0.00185;
 
 
 // assemble the initial vector of primitive variables
-for (int k=0; k<t+1; k++){
+for (int k=0; k<T; k++){
 for (int i=0; i<m+1; i++){
 	for (int j=0; j<nsp; j++){qp[j] = rho1[j];}
 	qp[Vs] = Tv1; 
@@ -133,7 +138,7 @@ double R[NSPMAX]  = {0.0};
 double C[NSPMAX]  = {0.0};
 
 // initialise the solver
-for (int k=0; k<t+1; k++){
+for (int k=0; k<T; k++){
 for (int i=0; i<m; i++){
 for (int j=0; j<nsp; j++){S[k][i][j] = 0.0;}
 S[k][i][3]  = 1.06e-3;
@@ -148,12 +153,12 @@ for (int k=0; k<t+1; k++){
 
 // apply the inlet boundary condition
 
-for (int j=0; j<Ps+1; j++){S[k][0][j] = Si[k][j];}
+for (int j=0; j<Ps+1; j++){S[0][0][j] = Si[k][j];}
 
 for (int i=1; i<m; i++){
 
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
-flux1(  S[k][i],F,&nsp,wsp,asp,hfsp,rsp);
+flux1(  S[0][i],F,&nsp,wsp,asp,hfsp,rsp);
 
 dA = A[i] - A[i-1];
 dx = x[i] - x[i-1];
@@ -162,10 +167,10 @@ for (int j=0; j<X+1; j++){
 	G[j] = 0.0;
 	G[j] = -F[j]*dA/(dx*A[i]);
 }
-G[X] += S[k][i][Ps]*dA/(A[i]*dx);
+G[X] += S[0][i][Ps]*dA/(A[i]*dx);
 
 // 4. Evaluate Q - > vector of thermochemical source terms
-for (int j=0; j<Ps+1; j++){qp[j] = S[k][i][j];}
+for (int j=0; j<Ps+1; j++){qp[j] = S[0][i][j];}
 
 src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,Q,J);
 
@@ -180,8 +185,8 @@ src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn
 //   U(.) = conserved variable vector
 //   alpha_{i+1/2} = max wave speed at the interface
 
-flux(S[k][i-1],  S[k][i],F1,&nsp,wsp,asp,hfsp,rsp);
-flux(  S[k][i],S[k][i+1],F2,&nsp,wsp,asp,hfsp,rsp);
+flux(S[0][i-1],  S[0][i],F1,&nsp,wsp,asp,hfsp,rsp);
+flux(  S[0][i],S[0][i+1],F2,&nsp,wsp,asp,hfsp,rsp);
 
 
 // supersonic outlet
@@ -218,22 +223,33 @@ for (int j = 0; j < Ps+1; j++) {
 // 9. Explicitly advance the state vector
 // S_{i,k+1} = S_{i,k} + dt*dS/dt 
 for (int n=0; n<Ps+1; n++){
-	S[k+1][i][n] = S[k][i][n] + dt*C[n];
+	S[1][i][n] = S[0][i][n] + dt*C[n];
 }
 
 
 // supersonic outlet
 if (i == m-1){
 for (int n = 0; n<X+1; n++){
-		S[k+1][i][n] = S[k+1][i-1][n];
+		S[1][i][n] = S[1][i-1][n];
 		}
 }
 
 }
+
+// write each time step
+write_outlet(S, m, x, k, dt, nsp, wsp, "../out/outlet.dat");
+
+// shuffle state vector indices for next step
+for (int i = 0; i<m; i ++){
+for (int n = 0; n<Ps+1; n++){
+		S[0][i][n] = S[1][i][n];
+		}
+}
+
+
 if (k % 250 == 0){
 	cout << k << " " << static_cast<float>(k)*dt << endl;
-	write_cl(S, m, x, k, dt, nsp, wsp, "../out/cl.dat");
-	write_outlet(S, m, x, t, dt, nsp, wsp, "../out/outlet.dat");
+//	write_cl(S, m, x, k, dt, nsp, wsp, "../out/cl.dat");
 }
 }
 
@@ -241,8 +257,8 @@ if (k % 250 == 0){
 
 // output the centerline profile to text
 
-write_cl(S, m, x, t-2, dt, nsp, wsp, "../out/cl.dat");
-write_outlet(S, m, x, t, dt, nsp, wsp, "../out/outlet.dat");
+//write_cl(S, m, x, t-2, dt, nsp, wsp, "../out/cl.dat");
+//write_outlet(S, m, x, t, dt, nsp, wsp, "../out/outlet.dat");
 
 cout << "Ran to completion. " << endl;
 
