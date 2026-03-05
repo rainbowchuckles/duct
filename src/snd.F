@@ -1,5 +1,6 @@
 c ... wrapper to get speed of sound
-      subroutine snd_c(nsp_c, wsp_c, asp_c, hfsp_c, rsp_c, qp_c, a_c)
+      recursive subroutine snd_c(nsp_c, wsp_c, asp_c, hfsp_c, 
+     2                          rsp_c, qp_c, a_c)
      3                bind(C, name="snd_c")
       use iso_c_binding, only: c_int, c_double
 

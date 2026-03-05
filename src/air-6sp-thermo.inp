@@ -1,7 +1,7 @@
 &chem
   chmf     = '../../slime/in/thermo/park93-6sp/chemkin_o2_n2.dat',
   rcnf     = '../../slime/in/thermo/park93-6sp/reactions_park93_o2_n2.dat',
-  mw_file  = '../../slime/in/thermo/park93-6sp/mw_millikan_o2_n2.dat',
+  mw_file  = '../../slime/in/thermo/park93-6sp/mw_sebacher_o2_n2.dat',
   cs_file  = '../../slime/in/thermo/park93-6sp/cs_o2_n2.dat',
   mst_file = '../../slime/in/thermo/park93-6sp/tbr_park93_o2_n2.dat',
   diss_file= '../../slime/in/thermo/park93-6sp/diss_o2_n2.dat',

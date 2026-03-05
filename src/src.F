@@ -2,7 +2,8 @@ c ... this subroutine is a wrapper for the LASTA/NESS src.F subroutine
 c     that calculates non-equilibrium source terms for an arbitrary
 c     two-temperature plasma
       
-      subroutine src_c(nsp_c,nelsp_c,ielsp_c,melsp_c,wsp_c,rsp_c,
+      recursive subroutine src_c(nsp_c,nelsp_c,ielsp_c,melsp_c,
+     1                 wsp_c,rsp_c,
      1                 asp_c,hfsp_c,mw_c,cs_c,diss_c,inz_c,apb_c,
      2                 nrn_c,nsprn_c,isprn_c,msprn_c,ktbrn_c,xtbrn_c,
      3                 arr_c,qp_c,f_c,J_c) bind(C, name="src_c")

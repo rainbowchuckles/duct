@@ -6,6 +6,7 @@
 #include <cmath>
 #include <fstream>
 #include <cstring>
+#include <omp.h>
 
 // variable definitions
 #include "size.h"
@@ -82,7 +83,7 @@ linterp( l.data(), Ai.data(), s, x.data(), A.data(), m);
 vector<vector<double>> inlet;
 vector<vector<double>> data;
 
-read_inlet_file("inlet1.dat",inlet);
+read_inlet_file("x3s656-inlet.dat",inlet);
 
 // interpolate inlet file to match time grid
 double Si[N][NSPMAX] = {0.0};
@@ -141,12 +142,21 @@ double C[NSPMAX]  = {0.0};
 for (int k=0; k<T; k++){
 for (int i=0; i<m; i++){
 for (int j=0; j<nsp; j++){S[k][i][j] = 0.0;}
-S[k][i][3]  = 1.06e-3;
-S[k][i][5]  = 3.23e-4;
-S[k][i][Vs] = 500;
+// x3s656 - aaron thesis
+S[k][i][3]  = 7.10e-5;
+S[k][i][5]  = 2.16e-5;
+S[k][i][Vs] = 400;
 S[k][i][Us] = 0;
-S[k][i][Ps] = 120;
+S[k][i][Ps] = 8;
+// x3s403 - gildfind
+//S[k][i][3]  = 1.06e-3;
+//S[k][i][5]  = 3.23e-4;
+//S[k][i][Vs] = 400;
+//S[k][i][Us] = 0;
+//S[k][i][Ps] = 120;
 }}
+
+omp_set_num_threads(24);
 
 // the main loop
 for (int k=0; k<t+1; k++){
@@ -155,6 +165,7 @@ for (int k=0; k<t+1; k++){
 
 for (int j=0; j<Ps+1; j++){S[0][0][j] = Si[k][j];}
 
+#pragma omp parallel for firstprivate(dA,dx,F,G,qp,Q,J,F1,F2,R,C)
 for (int i=1; i<m; i++){
 
 // 3. Evaluate G(S) = [0, ..., 0, 0, 0, p.dA/dx] -> geometric source term
@@ -173,7 +184,6 @@ G[X] += S[0][i][Ps]*dA/(A[i]*dx);
 for (int j=0; j<Ps+1; j++){qp[j] = S[0][i][j];}
 
 src_c(&nsp,nelsp,ielsp,melsp,wsp,rsp,asp,hfsp,mw,cs,diss,inz,apb,nrn,nsprn,isprn,msprn,ktbrn,xtbrn,arr,qp,Q,J);
-
 // 6. For each streamwise cell i evaluate the numerical fluxes:
 // F_{i+1/2} = 0.5 * ( F(S_L) + F(S_R) )
 //             - 0.5 * alpha_{i+1/2} * ( U(S_R) - U(S_L) )
@@ -238,6 +248,7 @@ for (int n = 0; n<X+1; n++){
 
 // write each time step
 write_outlet(S, m, x, k, dt, nsp, wsp, "../out/outlet.dat");
+write_cl(S, m, x, k, dt, nsp, wsp, "../out/cl.dat");
 
 // shuffle state vector indices for next step
 for (int i = 0; i<m; i ++){
