@@ -50,8 +50,6 @@ where S is the vector of state variables:
 
 --------------------------------------------------------------------------------
 
-## Rusanov Flux
-
 The interface flux F_hat_(i+1/2)^k is computed using the Rusanov (local Lax-Friedrichs) scheme:
 
     F_hat_(i+1/2)^k = 0.5 * (F_i^k + F_(i+1)^k)
@@ -62,3 +60,11 @@ where alpha is the maximum wave speed at the cell interface:
     alpha_(i+1/2)^k = max( |u_i^k + a_i^k|, |u_(i+1)^k + a_(i+1)^k| )
 
 and u and a are the velocity and speed of sound respectively.
+
+
+## Quick start
+
+Compile using make, you will need g++, gcc, OCEAN, lapack, lblas, openmpi
+Execute using ./a.out air.inp air-6sp-thermo.inp X3-M12.dat
+Initial conditions need to be set in main.cpp (will fix this later)
+
