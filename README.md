@@ -3,17 +3,62 @@
 </p>
 
 
-Joseph Steer 28/01/2026
+Joseph Steer 6/3/26
 
-This software was developed to solve equation 16 from: 
+This software was developed to model the flow through a supersonic nozzle.
 
-<em>Rotta NR. Effects of nose bluntness on the boundary layer characteristics of conical bodies at hypersonic speeds. 1966 Nov 1</em>
+## Governing Equations
 
-Run the code by inputting the desired cone properties in rotta.py and then running the same file. j.py, f.py, and shape.py contain functions written to determine j(y_bar), f(eta_e), and the shock shape from the correlation given in the paper. A text file of outputs is then created containing the non-dimensional parameter s_bar and Me, the Mach number at the boundary layer edge.
+A quasi-1D, inviscid, two-temperature variable area duct obeys the conservation equations:
 
-Some comments on the implementation:
-- The result is sensitive to the solution tolerance allowed for f(eta_e). Rotta does not provide any detail about how he chose this, or indeed what pressure gradient parameter (beta) was used
-- In determination of j(y_bar), it seems that it was common practice to isentropically expand the post-shock properties to the cone surface pressure determined using Taylor-Maccoll / modified Newtonian method. A single pressure value seems to have been used by Rotta, which leads to (in my opinion) a non-physical Mach number at the stagnation point. This could be improved if desired by expressing the surface pressure as a function of s_bar
-- In order to produce the figures in the validation folder, I had to use a linear viscosity model i.e. mu is directly proportional to T. If using Sutherland's law, the Mach 20 result can not be reproduced. I think it is really better to use Sutherland's law, however at Mach 20 (~8000K) one will likely encounter real gas effects that would change the solution anyway
+    d/dt (A*U) + d/dx (A*F) = A*Q
 
-Enjoy! 
+where U is the vector of conserved variables, F is the flux vector, Q is the vector of
+thermochemical source terms, and A is the area as a function of streamwise distance.
+
+This can be expressed in matrix form as:
+
+         | rho_s |            | rho_s*u         |                | rho_s*u         |   | q_dot_s |
+         | ...   |            | ...             |                | ...             |   | ...     |
+    d/dt | rho_N | =  -d/dx   | rho_N*u         | - (1/A)(dA/dx) | rho_N*u         | + | q_dot_N |
+         | rho*u |            | rho*u*u + p     |                | rho*u*u         |   | 0       |
+         |rho*e_V|            | rho*e_V*u + p_e |                | rho*e_V*u + p_e |   | q_dot_V |
+         | rho*E |            | rho*H*u         |                | rho*H*u         |   | 0       |
+
+where (1) are the conserved variables, (2) are the fluxes, (3) are the geometric source
+terms, and (4) are the thermochemical source terms.
+
+--------------------------------------------------------------------------------
+
+## Numerical Scheme
+
+The system is discretised and solved using a finite-volume scheme with an explicit update:
+
+    S_i^(k+1) = S_i^(k) + dt * inv(J_US)|_i^k
+                * [ -(1/dx) * (F_hat_(i+1/2)^k - F_hat_(i-1/2)^k)
+                    - (1/A_i^k) * (A_(i+1/2) - A_(i-1/2))/dx * (F_i^k - G_i^k)
+                    + Q_i^k ]
+
+where S is the vector of state variables:
+
+    S = | rho_s |
+        | ...   |
+        | rho_N |
+        | u     |
+        | T_V   |
+        | p     |
+
+--------------------------------------------------------------------------------
+
+## Rusanov Flux
+
+The interface flux F_hat_(i+1/2)^k is computed using the Rusanov (local Lax-Friedrichs) scheme:
+
+    F_hat_(i+1/2)^k = 0.5 * (F_i^k + F_(i+1)^k)
+                      - 0.5 * alpha_(i+1/2)^k * (U_(i+1)^k - U_i^k)
+
+where alpha is the maximum wave speed at the cell interface:
+
+    alpha_(i+1/2)^k = max( |u_i^k + a_i^k|, |u_(i+1)^k + a_(i+1)^k| )
+
+and u and a are the velocity and speed of sound respectively.
