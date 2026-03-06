@@ -64,7 +64,9 @@ and u and a are the velocity and speed of sound respectively.
 
 ## Quick start
 
-Compile using make, you will need g++, gcc, OCEAN, lapack, lblas, openmpi
+Compile using make, you will need g++, gcc, lasta2, OCEAN, lapack, lblas, openmpi
+
 Execute using ./a.out air.inp air-6sp-thermo.inp X3-M12.dat
+
 Initial conditions need to be set in main.cpp (will fix this later)
 
